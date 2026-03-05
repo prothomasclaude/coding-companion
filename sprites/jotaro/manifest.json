@@ -1,0 +1,46 @@
+{
+  "name": "Jotaro Kujo",
+  "author": "Spriters Resource",
+  "framePattern": "Jot_0-{n}.png",
+  "display": { "width": 384, "height": 224 },
+  "animations": {
+    "idle":    { "frames": [0, 17],    "speed": 120 },
+    "walk":    { "frames": [40, 50],   "speed": 100 },
+    "punch":   { "frames": [700, 712], "speed": 80  },
+    "victory": { "frames": [160, 172], "speed": 120 },
+    "crouch":  { "frames": [550, 558], "speed": 140 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "thinking": {
+      "animations": ["walk", "crouch"],
+      "loop": true,
+      "swapInterval": 4000
+    },
+    "pose": {
+      "animation": "punch",
+      "loop": true,
+      "duration": 5000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["やれやれだぜ...", "...", "Waiting."],
+    "thinking": ["やれやれだぜ...", "Yare yare daze...", "...", "Good grief...", "Working on it.", "Star Platinum!"],
+    "pose": ["ORA ORA ORA ORA!", "STAR PLATINUM!", "ORA!", "ORAORAORAORAORA!"],
+    "greeting": ["やれやれだぜ..."]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#ffd700"
+  },
+  "preview": "Jot_0-0.png"
+}

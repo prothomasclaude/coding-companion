@@ -1,0 +1,13 @@
+{
+  "name": "coding-companion",
+  "version": "2.0.0",
+  "description": "Animated sprite overlay companion for Claude Code sessions",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "install-deps": "npm install electron --save-dev"
+  },
+  "devDependencies": {
+    "electron": "^33.0.0"
+  }
+}

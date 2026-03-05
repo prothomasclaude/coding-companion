@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      background: transparent;
+      user-select: none;
+      -webkit-app-region: no-drag;
+    }
+
+    #container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    #sprite {
+      image-rendering: pixelated;
+      image-rendering: crisp-edges;
+      object-fit: contain;
+      pointer-events: none;
+    }
+
+    #speech-bubble {
+      position: absolute;
+      bottom: 200px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: white;
+      color: #1a1a2e;
+      font-family: 'Segoe UI', 'Inter', sans-serif;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 12px;
+      border-radius: 10px;
+      white-space: nowrap;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      border: 1.5px solid #e0e0e0;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    #speech-bubble.visible { opacity: 1; }
+
+    #speech-bubble::after {
+      content: '';
+      position: absolute;
+      bottom: -7px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 0; height: 0;
+      border-left: 7px solid transparent;
+      border-right: 7px solid transparent;
+      border-top: 7px solid white;
+    }
+
+    .thinking-aura {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 140px;
+      height: 100px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(123,104,238,0.25) 0%, transparent 70%);
+      animation: pulse-aura 1.5s ease-in-out infinite;
+      pointer-events: none;
+    }
+
+    @keyframes pulse-aura {
+      0%, 100% { transform: translateX(-50%) scale(1); opacity: 0.5; }
+      50% { transform: translateX(-50%) scale(1.2); opacity: 1; }
+    }
+
+    .star-particle {
+      position: absolute;
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      pointer-events: none;
+      animation: star-fly 0.8s ease-out forwards;
+    }
+
+    @keyframes star-fly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(0); }
+    }
+  </style>
+</head>
+<body>
+  <div id="container">
+    <div id="speech-bubble"></div>
+    <div id="aura" class="thinking-aura" style="display:none"></div>
+    <img id="sprite" src="" alt="Companion">
+  </div>
+
+  <script>
+    const spriteEl = document.getElementById('sprite');
+    const bubble = document.getElementById('speech-bubble');
+    const aura = document.getElementById('aura');
+    const container = document.getElementById('container');
+    const path = require('path');
+    const fs = require('fs');
+
+    // ===== State =====
+    let manifest = null;
+    let spritesDir = '';
+    let anims = {};
+    let messages = {};
+    let effects = {};
+    let stateConfig = {};
+
+    let currentState = 'idle';
+    let currentAnim = '';
+    let frameIndex = 0;
+    let animTimer = null;
+    let bubbleTimer = null;
+    let poseTimer = null;
+    let swapTimer = null;
+
+    // ===== Helpers =====
+    function range(start, end) {
+      const arr = [];
+      for (let i = start; i <= end; i++) arr.push(i);
+      return arr;
+    }
+
+    function getFramePath(n) {
+      const filename = manifest.framePattern.replace('{n}', n);
+      return 'file://' + path.join(spritesDir, filename);
+    }
+
+    function preloadFrames() {
+      Object.values(anims).forEach(anim => {
+        anim.frameNums.forEach(n => {
+          const img = new Image();
+          img.src = getFramePath(n);
+        });
+      });
+    }
+
+    // ===== Load Manifest =====
+    function loadManifest(spriteName) {
+      spritesDir = path.join(__dirname, 'sprites', spriteName);
+      const manifestPath = path.join(spritesDir, 'manifest.json');
+      manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+
+      // Build animations with expanded frame ranges
+      anims = {};
+      for (const [name, def] of Object.entries(manifest.animations)) {
+        anims[name] = {
+          frameNums: range(def.frames[0], def.frames[1]),
+          speed: def.speed
+        };
+      }
+
+      messages = manifest.messages || {};
+      effects = manifest.effects || {};
+      stateConfig = manifest.states || {};
+
+      // Apply display size
+      spriteEl.style.width = manifest.display.width + 'px';
+      spriteEl.style.height = manifest.display.height + 'px';
+
+      // Position speech bubble above sprite
+      bubble.style.bottom = (manifest.display.height - 20) + 'px';
+
+      preloadFrames();
+    }
+
+    // ===== Animation Playback =====
+    function playAnim(animName, loop = true) {
+      if (currentAnim === animName) return;
+      currentAnim = animName;
+      frameIndex = 0;
+
+      if (animTimer) clearInterval(animTimer);
+
+      const anim = anims[animName];
+      if (!anim) return;
+
+      const tick = () => {
+        const n = anim.frameNums[frameIndex];
+        spriteEl.src = getFramePath(n);
+        frameIndex++;
+        if (frameIndex >= anim.frameNums.length) {
+          if (loop) {
+            frameIndex = 0;
+          } else {
+            clearInterval(animTimer);
+            animTimer = null;
+          }
+        }
+      };
+
+      tick();
+      animTimer = setInterval(tick, anim.speed);
+    }
+
+    // ===== Speech Bubbles =====
+    function showBubble(pool) {
+      if (!pool || pool.length === 0) return;
+      const msg = pool[Math.floor(Math.random() * pool.length)];
+      bubble.textContent = msg;
+      bubble.classList.add('visible');
+      if (bubbleTimer) clearTimeout(bubbleTimer);
+      bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), 2500);
+    }
+
+    // ===== Particles =====
+    function spawnParticle() {
+      const particle = document.createElement('div');
+      particle.className = 'star-particle';
+      particle.style.background = effects.particleColor || '#ffd700';
+      const angle = Math.random() * Math.PI * 2;
+      const dist = 40 + Math.random() * 60;
+      particle.style.setProperty('--dx', `${Math.cos(angle) * dist}px`);
+      particle.style.setProperty('--dy', `${Math.sin(angle) * dist}px`);
+      particle.style.left = `${container.offsetWidth / 2 + (Math.random() - 0.5) * 40}px`;
+      particle.style.bottom = `${30 + Math.random() * 50}px`;
+      container.appendChild(particle);
+      setTimeout(() => particle.remove(), 800);
+    }
+
+    // ===== State Machine =====
+    window.updateState = function(newState) {
+      if (newState === currentState) return;
+      const prevState = currentState;
+      currentState = newState;
+
+      if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
+
+      if (newState === 'thinking') {
+        const cfg = stateConfig.thinking || {};
+        if (effects.thinkingAura) aura.style.display = 'block';
+
+        const thinkAnims = cfg.animations || ['idle'];
+        const pick = thinkAnims[Math.floor(Math.random() * thinkAnims.length)];
+        playAnim(pick, cfg.loop !== false);
+        showBubble(messages.thinking);
+
+        if (cfg.swapInterval && thinkAnims.length > 1) {
+          swapTimer = setInterval(() => {
+            const next = thinkAnims[Math.floor(Math.random() * thinkAnims.length)];
+            currentAnim = '';
+            playAnim(next, true);
+            if (Math.random() < 0.3) showBubble(messages.thinking);
+          }, cfg.swapInterval);
+        }
+      } else if (newState === 'idle') {
+        aura.style.display = 'none';
+
+        if (prevState === 'thinking') {
+          const poseCfg = stateConfig.pose || {};
+          currentState = 'pose';
+          if (effects.thinkingAura) aura.style.display = 'block';
+          playAnim(poseCfg.animation || 'idle', poseCfg.loop !== false);
+          showBubble(messages.pose);
+
+          if (effects.poseParticles) {
+            for (let i = 0; i < 8; i++) {
+              setTimeout(() => spawnParticle(), i * 120);
+            }
+          }
+
+          if (poseTimer) clearTimeout(poseTimer);
+          poseTimer = setTimeout(() => {
+            currentState = 'idle';
+            aura.style.display = 'none';
+
+            const then = poseCfg.then;
+            if (then) {
+              playAnim(then.animation, then.loop !== undefined ? then.loop : false);
+              if (then.thenIdle) {
+                const thenAnim = anims[then.animation];
+                const duration = thenAnim ? thenAnim.frameNums.length * thenAnim.speed + 200 : 2000;
+                setTimeout(() => {
+                  if (currentState === 'idle') {
+                    const idleCfg = stateConfig.idle || {};
+                    playAnim(idleCfg.animation || 'idle', true);
+                  }
+                }, duration);
+              }
+            } else {
+              const idleCfg = stateConfig.idle || {};
+              playAnim(idleCfg.animation || 'idle', true);
+            }
+            showBubble(messages.idle);
+          }, poseCfg.duration || 5000);
+        } else {
+          const idleCfg = stateConfig.idle || {};
+          playAnim(idleCfg.animation || 'idle', true);
+          showBubble(messages.idle);
+        }
+      }
+    };
+
+    // Random bubbles
+    setInterval(() => {
+      if (currentState === 'idle' && Math.random() < 0.15) showBubble(messages.idle);
+      if (currentState === 'pose' && Math.random() < 0.3) {
+        showBubble(messages.pose);
+        if (effects.poseParticles) spawnParticle();
+      }
+    }, 3000);
+
+    // ===== Reload (called by main process on character switch) =====
+    window.reloadSprite = function(spriteName) {
+      if (animTimer) clearInterval(animTimer);
+      if (swapTimer) clearInterval(swapTimer);
+      if (poseTimer) clearTimeout(poseTimer);
+      currentAnim = '';
+      currentState = 'idle';
+
+      spriteEl.style.opacity = '0';
+      setTimeout(() => {
+        loadManifest(spriteName);
+        const idleCfg = stateConfig.idle || {};
+        playAnim(idleCfg.animation || 'idle', true);
+        spriteEl.style.opacity = '1';
+        showBubble(messages.greeting || messages.idle);
+      }, 200);
+    };
+
+    // ===== Init (called by main process with selected sprite name) =====
+    window.initCompanion = function(spriteName) {
+      loadManifest(spriteName);
+      spriteEl.style.transition = 'opacity 0.2s ease';
+      const idleCfg = stateConfig.idle || {};
+      playAnim(idleCfg.animation || 'idle', true);
+      setTimeout(() => showBubble(messages.greeting || messages.idle), 1000);
+    };
+  </script>
+</body>
+</html>
