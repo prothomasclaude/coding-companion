@@ -48,14 +48,13 @@ function scanSpritePacks() {
   return packs;
 }
 
-// ===== Get sprite display size from manifest =====
-function getSpriteSize(spriteName) {
+// ===== Get sprite manifest info =====
+function getSpriteManifest(spriteName) {
   try {
     const manifestPath = path.join(SPRITES_DIR, spriteName, "manifest.json");
-    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
-    return manifest.display || { width: 384, height: 224 };
+    return JSON.parse(fs.readFileSync(manifestPath, "utf8"));
   } catch {
-    return { width: 384, height: 224 };
+    return { display: { width: 384, height: 224 } };
   }
 }
 
@@ -63,7 +62,8 @@ function getSpriteSize(spriteName) {
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const config = loadConfig();
-  const spriteSize = getSpriteSize(config.selectedSprite);
+  const manifest = getSpriteManifest(config.selectedSprite);
+  const spriteSize = manifest.display || { width: 384, height: 224 };
 
   // Window = sprite size + padding for speech bubble above
   const winWidth = spriteSize.width + 40;
@@ -89,6 +89,16 @@ function createWindow() {
       contextIsolation: false,
     },
   });
+
+  // Set click-through shape: only the hitArea receives mouse events,
+  // everything else passes clicks to windows behind
+  const hit = manifest.hitArea;
+  if (hit) {
+    // hitArea is relative to sprite; sprite is centered in window
+    const offsetX = Math.round((winWidth - spriteSize.width) / 2) + hit.x;
+    const offsetY = winHeight - spriteSize.height + hit.y;
+    mainWindow.setShape([{ x: offsetX, y: offsetY, width: hit.width, height: hit.height }]);
+  }
 
   mainWindow.loadFile("index.html");
 

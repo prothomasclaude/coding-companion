@@ -24,11 +24,16 @@
 
     #sprite-wrapper {
       position: relative;
-      cursor: grab;
-      -webkit-app-region: drag;
     }
 
-    #sprite-wrapper:active {
+    #drag-handle {
+      position: absolute;
+      cursor: grab;
+      -webkit-app-region: drag;
+      z-index: 5;
+    }
+
+    #drag-handle:active {
       cursor: grabbing;
     }
 
@@ -112,6 +117,7 @@
     <div id="speech-bubble"></div>
     <div id="aura" class="thinking-aura" style="display:none"></div>
     <div id="sprite-wrapper">
+      <div id="drag-handle"></div>
       <img id="sprite" src="" alt="Companion">
     </div>
   </div>
@@ -189,6 +195,22 @@
       // Apply display size
       spriteEl.style.width = manifest.display.width + 'px';
       spriteEl.style.height = manifest.display.height + 'px';
+
+      // Position drag handle on character hit area
+      const dragHandle = document.getElementById('drag-handle');
+      const hit = manifest.hitArea;
+      if (hit) {
+        dragHandle.style.left = hit.x + 'px';
+        dragHandle.style.top = hit.y + 'px';
+        dragHandle.style.width = hit.width + 'px';
+        dragHandle.style.height = hit.height + 'px';
+      } else {
+        // Fallback: cover entire sprite
+        dragHandle.style.left = '0';
+        dragHandle.style.top = '0';
+        dragHandle.style.width = manifest.display.width + 'px';
+        dragHandle.style.height = manifest.display.height + 'px';
+      }
 
       // Position speech bubble above sprite
       bubble.style.bottom = (manifest.display.height - 20) + 'px';

@@ -42,5 +42,6 @@
     "poseParticles": true,
     "particleColor": "#ffd700"
   },
+  "hitArea": { "x": 140, "y": 55, "width": 165, "height": 130 },
   "preview": "Jot_0-0.png"
 }
