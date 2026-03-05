@@ -5,8 +5,6 @@ const fs = require("fs");
 const STATUS_FILE = path.join(__dirname, "status.json");
 const CONFIG_FILE = path.join(__dirname, "config.json");
 const SPRITES_DIR = path.join(__dirname, "sprites");
-const WIN_WIDTH = 420;
-const WIN_HEIGHT = 280;
 const IS_MAC = process.platform === "darwin";
 
 let mainWindow;
@@ -50,18 +48,34 @@ function scanSpritePacks() {
   return packs;
 }
 
+// ===== Get sprite display size from manifest =====
+function getSpriteSize(spriteName) {
+  try {
+    const manifestPath = path.join(SPRITES_DIR, spriteName, "manifest.json");
+    const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+    return manifest.display || { width: 384, height: 224 };
+  } catch {
+    return { width: 384, height: 224 };
+  }
+}
+
 // ===== Main Sprite Window =====
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
   const config = loadConfig();
+  const spriteSize = getSpriteSize(config.selectedSprite);
+
+  // Window = sprite size + padding for speech bubble above
+  const winWidth = spriteSize.width + 40;
+  const winHeight = spriteSize.height + 80;
 
   // Restore saved position or default to bottom-right
-  const startX = config.posX !== undefined ? config.posX : width - WIN_WIDTH - 40;
-  const startY = config.posY !== undefined ? config.posY : height - WIN_HEIGHT - 20;
+  const startX = config.posX !== undefined ? config.posX : width - winWidth - 40;
+  const startY = config.posY !== undefined ? config.posY : height - winHeight - 20;
 
   mainWindow = new BrowserWindow({
-    width: WIN_WIDTH,
-    height: WIN_HEIGHT,
+    width: winWidth,
+    height: winHeight,
     x: startX,
     y: startY,
     transparent: true,
@@ -70,14 +84,12 @@ function createWindow() {
     skipTaskbar: true,
     hasShadow: false,
     resizable: false,
-    focusable: false,
     webPreferences: {
       nodeIntegration: true,
       contextIsolation: false,
     },
   });
 
-  mainWindow.setIgnoreMouseEvents(true, { forward: true });
   mainWindow.loadFile("index.html");
 
   // Init sprite after page loads
@@ -195,16 +207,11 @@ ipcMain.handle("select-sprite", (_event, spriteId) => {
   return { success: true };
 });
 
-// Toggle click-through for drag support
-ipcMain.on("set-ignore-mouse", (_event, ignore) => {
+// Manual window drag via IPC
+ipcMain.on("drag-move", (_event, dx, dy) => {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  if (ignore) {
-    mainWindow.setIgnoreMouseEvents(true, { forward: true });
-    mainWindow.setFocusable(false);
-  } else {
-    mainWindow.setIgnoreMouseEvents(false);
-    mainWindow.setFocusable(true);
-  }
+  const [x, y] = mainWindow.getPosition();
+  mainWindow.setPosition(x + dx, y + dy);
 });
 
 // ===== Status File =====

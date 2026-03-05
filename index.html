@@ -127,13 +127,8 @@
     const { ipcRenderer } = require('electron');
 
     // ===== Drag support =====
-    // When mouse enters sprite, disable click-through so user can drag
-    wrapper.addEventListener('mouseenter', () => {
-      ipcRenderer.send('set-ignore-mouse', false);
-    });
-    wrapper.addEventListener('mouseleave', () => {
-      ipcRenderer.send('set-ignore-mouse', true);
-    });
+    // -webkit-app-region: drag handles native window dragging via CSS.
+    // IPC fallback for position persistence.
 
     // ===== State =====
     let manifest = null;
