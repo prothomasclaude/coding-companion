@@ -16,10 +16,16 @@ fi
 # Set initial status
 "$SPRITE_DIR/hooks/set-status.sh" thinking
 
-# Start Electron app in background
-# Unset ELECTRON_RUN_AS_NODE (set by Cursor/VSCode) so Electron runs in GUI mode
+# Find Electron binary (cross-platform)
 cd "$SPRITE_DIR"
-ELECTRON_RUN_AS_NODE= ELECTRON_NO_ATTACH_CONSOLE= ./node_modules/electron/dist/electron . &>/dev/null &
+if [ "$(uname)" = "Darwin" ]; then
+  ELECTRON="./node_modules/electron/dist/Electron.app/Contents/MacOS/Electron"
+else
+  ELECTRON="./node_modules/electron/dist/electron"
+fi
+
+# Unset ELECTRON_RUN_AS_NODE (set by Cursor/VSCode) so Electron runs in GUI mode
+ELECTRON_RUN_AS_NODE= ELECTRON_NO_ATTACH_CONSOLE= "$ELECTRON" . &>/dev/null &
 echo $! > "$PID_FILE"
 
 exit 0

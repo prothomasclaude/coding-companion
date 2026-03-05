@@ -22,6 +22,16 @@
       justify-content: center;
     }
 
+    #sprite-wrapper {
+      position: relative;
+      cursor: grab;
+      -webkit-app-region: drag;
+    }
+
+    #sprite-wrapper:active {
+      cursor: grabbing;
+    }
+
     #sprite {
       image-rendering: pixelated;
       image-rendering: crisp-edges;
@@ -101,16 +111,29 @@
   <div id="container">
     <div id="speech-bubble"></div>
     <div id="aura" class="thinking-aura" style="display:none"></div>
-    <img id="sprite" src="" alt="Companion">
+    <div id="sprite-wrapper">
+      <img id="sprite" src="" alt="Companion">
+    </div>
   </div>
 
   <script>
     const spriteEl = document.getElementById('sprite');
+    const wrapper = document.getElementById('sprite-wrapper');
     const bubble = document.getElementById('speech-bubble');
     const aura = document.getElementById('aura');
     const container = document.getElementById('container');
     const path = require('path');
     const fs = require('fs');
+    const { ipcRenderer } = require('electron');
+
+    // ===== Drag support =====
+    // When mouse enters sprite, disable click-through so user can drag
+    wrapper.addEventListener('mouseenter', () => {
+      ipcRenderer.send('set-ignore-mouse', false);
+    });
+    wrapper.addEventListener('mouseleave', () => {
+      ipcRenderer.send('set-ignore-mouse', true);
+    });
 
     // ===== State =====
     let manifest = null;

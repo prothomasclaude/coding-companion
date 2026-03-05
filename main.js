@@ -7,10 +7,12 @@ const CONFIG_FILE = path.join(__dirname, "config.json");
 const SPRITES_DIR = path.join(__dirname, "sprites");
 const WIN_WIDTH = 420;
 const WIN_HEIGHT = 280;
+const IS_MAC = process.platform === "darwin";
 
 let mainWindow;
 let configWindow;
 let tray;
+let savePositionTimer;
 
 // ===== Config =====
 function loadConfig() {
@@ -51,12 +53,17 @@ function scanSpritePacks() {
 // ===== Main Sprite Window =====
 function createWindow() {
   const { width, height } = screen.getPrimaryDisplay().workAreaSize;
+  const config = loadConfig();
+
+  // Restore saved position or default to bottom-right
+  const startX = config.posX !== undefined ? config.posX : width - WIN_WIDTH - 40;
+  const startY = config.posY !== undefined ? config.posY : height - WIN_HEIGHT - 20;
 
   mainWindow = new BrowserWindow({
     width: WIN_WIDTH,
     height: WIN_HEIGHT,
-    x: width - WIN_WIDTH - 40,
-    y: height - WIN_HEIGHT - 20,
+    x: startX,
+    y: startY,
     transparent: true,
     frame: false,
     alwaysOnTop: true,
@@ -74,11 +81,22 @@ function createWindow() {
   mainWindow.loadFile("index.html");
 
   // Init sprite after page loads
-  const config = loadConfig();
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow.webContents.executeJavaScript(
       `window.initCompanion && window.initCompanion("${config.selectedSprite}")`,
     );
+  });
+
+  // Save position when window moves (debounced)
+  mainWindow.on("moved", () => {
+    if (savePositionTimer) clearTimeout(savePositionTimer);
+    savePositionTimer = setTimeout(() => {
+      const [x, y] = mainWindow.getPosition();
+      const cfg = loadConfig();
+      cfg.posX = x;
+      cfg.posY = y;
+      saveConfig(cfg);
+    }, 500);
   });
 
   ensureStatusFile();
@@ -117,21 +135,31 @@ function createConfigWindow() {
 }
 
 // ===== Tray Icon =====
+function createTrayIcon() {
+  const size = 22;
+  const buf = Buffer.alloc(size * size * 4, 0);
+
+  const px = (x, y, r, g, b, a = 255) => {
+    if (x < 0 || x >= size || y < 0 || y >= size) return;
+    const i = (y * size + x) * 4;
+    buf[i] = r; buf[i+1] = g; buf[i+2] = b; buf[i+3] = a;
+  };
+
+  for (let x = 7; x <= 14; x++) for (let y = 3; y <= 5; y++) px(x, y, 123, 104, 238);
+  for (let x = 6; x <= 15; x++) for (let y = 6; y <= 10; y++) px(x, y, 123, 104, 238);
+  for (let x = 7; x <= 14; x++) px(x, 11, 123, 104, 238);
+  px(9, 8, 255, 255, 255); px(12, 8, 255, 255, 255);
+  for (let x = 8; x <= 13; x++) for (let y = 12; y <= 17; y++) px(x, y, 90, 75, 200);
+  for (let y = 13; y <= 15; y++) { px(7, y, 90, 75, 200); px(14, y, 90, 75, 200); }
+  for (let y = 18; y <= 20; y++) { px(9, y, 70, 55, 180); px(12, y, 70, 55, 180); }
+
+  const img = nativeImage.createFromBuffer(buf, { width: size, height: size });
+  if (IS_MAC) img.setTemplateImage(true);
+  return img;
+}
+
 function createTray() {
-  // Try to use the first frame of selected sprite as tray icon
-  const config = loadConfig();
-  const previewPath = path.join(SPRITES_DIR, config.selectedSprite, "manifest.json");
-  let trayIcon;
-
-  try {
-    const manifest = JSON.parse(fs.readFileSync(previewPath, "utf8"));
-    const imgPath = path.join(SPRITES_DIR, config.selectedSprite, manifest.preview);
-    trayIcon = nativeImage.createFromPath(imgPath).resize({ width: 22, height: 22 });
-  } catch {
-    // Fallback: create a simple icon
-    trayIcon = nativeImage.createEmpty();
-  }
-
+  const trayIcon = createTrayIcon();
   tray = new Tray(trayIcon);
   tray.setToolTip("Coding Companion");
 
@@ -151,41 +179,43 @@ function createTray() {
 }
 
 // ===== IPC Handlers =====
-ipcMain.handle("get-sprite-packs", () => {
-  return scanSpritePacks();
-});
+ipcMain.handle("get-sprite-packs", () => scanSpritePacks());
+ipcMain.handle("get-config", () => loadConfig());
 
-ipcMain.handle("get-config", () => {
-  return loadConfig();
-});
-
-ipcMain.handle("select-sprite", (event, spriteId) => {
-  const config = { selectedSprite: spriteId };
+ipcMain.handle("select-sprite", (_event, spriteId) => {
+  const config = loadConfig();
+  config.selectedSprite = spriteId;
   saveConfig(config);
 
-  // Hot-reload the sprite in the main window
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.webContents.executeJavaScript(
       `window.reloadSprite && window.reloadSprite("${spriteId}")`,
     );
   }
-
   return { success: true };
+});
+
+// Toggle click-through for drag support
+ipcMain.on("set-ignore-mouse", (_event, ignore) => {
+  if (!mainWindow || mainWindow.isDestroyed()) return;
+  if (ignore) {
+    mainWindow.setIgnoreMouseEvents(true, { forward: true });
+    mainWindow.setFocusable(false);
+  } else {
+    mainWindow.setIgnoreMouseEvents(false);
+    mainWindow.setFocusable(true);
+  }
 });
 
 // ===== Status File =====
 function ensureStatusFile() {
   if (!fs.existsSync(STATUS_FILE)) {
-    fs.writeFileSync(
-      STATUS_FILE,
-      JSON.stringify({ state: "idle", timestamp: Date.now() }),
-    );
+    fs.writeFileSync(STATUS_FILE, JSON.stringify({ state: "idle", timestamp: Date.now() }));
   }
 }
 
 function watchStatus() {
   let lastState = "idle";
-
   const checkStatus = () => {
     try {
       const data = JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
@@ -195,11 +225,8 @@ function watchStatus() {
           `window.updateState && window.updateState("${data.state}")`,
         );
       }
-    } catch {
-      // File might be mid-write, ignore
-    }
+    } catch {}
   };
-
   setInterval(checkStatus, 300);
   checkStatus();
 }
@@ -211,6 +238,5 @@ app.whenReady().then(() => {
 });
 
 app.on("window-all-closed", () => app.quit());
-
 process.on("SIGTERM", () => app.quit());
 process.on("SIGINT", () => app.quit());
