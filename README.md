@@ -1,37 +1,43 @@
 # Coding Companion
 
-Animated sprite overlay that lives on your screen while Claude Code works. Your companion reacts to Claude's activity — idle when waiting, animated when thinking, and celebrating when done.
+Animated pixel-art sprite that lives on your desktop and reacts to Claude Code activity in real time.
 
-![Jotaro Companion](https://img.shields.io/badge/Electron-33-blue) ![License](https://img.shields.io/badge/license-MIT-green)
+![Electron](https://img.shields.io/badge/Electron-33-blue) ![License](https://img.shields.io/badge/license-MIT-green)
 
 ## How it works
 
-- **Idle** → Your character hangs out in their idle stance
-- **Thinking** → Animated when Claude is processing your request (walk, crouch, etc.)
-- **Pose** → Victory animation when Claude finishes (ORA ORA ORA!)
+Your companion watches Claude Code through shell hooks:
 
-Communication happens via a simple `status.json` file that Claude Code hooks write to. The Electron app polls it every 300ms.
+- **Idle** — character hangs out, occasionally talks
+- **Working** — animated when Claude is processing (with aura glow)
+- **Finished** — victory pose, particles, and celebration when Claude is done
 
-## Setup
+Communication happens via a `status.json` file that Claude Code hooks write to. The Electron overlay polls it every 300ms.
 
-### 1. Install
+## Installation
+
+### Prerequisites
+
+- **Node.js** 18+
+- **npm**
+- **Claude Code** CLI
+
+### 1. Clone the repo
 
 ```bash
+git clone git@github.com:prothomasclaude/coding-companion.git ~/.claude/coding-companion
 cd ~/.claude/coding-companion
+```
+
+### 2. Install dependencies
+
+```bash
 npm install
 ```
 
-### 2. Add a sprite pack
-
-Create a folder in `sprites/` with:
-- Individual PNG frames for your character
-- A `manifest.json` defining animations, messages, and effects
-
-See [sprites/jotaro/manifest.json](sprites/jotaro/manifest.json) for the format.
-
 ### 3. Configure Claude Code hooks
 
-Add to `~/.claude/settings.json`:
+Add the following to your `~/.claude/settings.json`:
 
 ```json
 {
@@ -49,7 +55,7 @@ Add to `~/.claude/settings.json`:
     ],
     "UserPromptSubmit": [
       {
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/set-status.sh thinking", "timeout": 2 }]
+        "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/set-status.sh working", "timeout": 2 }]
       }
     ],
     "Stop": [
@@ -61,71 +67,120 @@ Add to `~/.claude/settings.json`:
 }
 ```
 
-### 4. Manual launch (optional)
+That's it. Next time you start a Claude Code session, your companion will appear on screen.
+
+## Usage
+
+### Automatic (via hooks)
+
+The companion starts/stops automatically with Claude Code sessions. No manual intervention needed.
+
+### Manual
 
 ```bash
-# Start
+# Start the companion
 ~/.claude/coding-companion/hooks/start-sprite.sh
 
-# Stop
+# Stop it
 ~/.claude/coding-companion/hooks/stop-sprite.sh
 
 # Force a state
-~/.claude/coding-companion/hooks/set-status.sh thinking
+~/.claude/coding-companion/hooks/set-status.sh working
 ~/.claude/coding-companion/hooks/set-status.sh idle
 ```
 
-## Sprite Pack Format
+### Select a character
 
-Each sprite pack is a folder in `sprites/` with a `manifest.json`:
+Right-click the tray icon → **"Select Character..."** to open the picker. Your selection persists across sessions.
+
+### Move the sprite
+
+Click and drag the character to reposition it. Position is saved automatically.
+
+## Available Characters
+
+| Character | Source |
+|-----------|--------|
+| Jotaro Kujo | JoJo's Bizarre Adventure |
+| DIO | JoJo's Bizarre Adventure |
+| Joseph Joestar | JoJo's Bizarre Adventure |
+| Monkey D. Luffy | One Piece |
+| Murloc | World of Warcraft |
+| Peon | Warcraft |
+| Isaac | The Binding of Isaac |
+| Slime | Generic RPG |
+
+## Create your own sprite pack
+
+Create a folder in `sprites/` with PNG frames and a `manifest.json`:
+
+```
+sprites/my-character/
+├── manifest.json
+├── frame_0.png
+├── frame_1.png
+├── ...
+└── frame_N.png
+```
+
+### manifest.json
 
 ```json
 {
   "name": "Character Name",
   "author": "Source",
-  "framePattern": "frame-{n}.png",
-  "display": { "width": 384, "height": 224 },
+  "framePattern": "frame_{n}.png",
+  "display": { "width": 128, "height": 128 },
   "animations": {
-    "idle":    { "frames": [0, 17],  "speed": 120 },
-    "walk":    { "frames": [40, 50], "speed": 100 },
-    "punch":   { "frames": [700, 712], "speed": 80 },
-    "victory": { "frames": [160, 172], "speed": 120 }
+    "idle":     { "frames": [0, 3],  "speed": 150 },
+    "waiting":  { "frames": [4, 7],  "speed": 120 },
+    "working":  { "frames": [8, 11], "speed": 100 },
+    "finished": { "frames": [12, 15], "speed": 80 },
+    "victory":  { "frames": [16, 19], "speed": 140 }
   },
   "states": {
     "idle":     { "animation": "idle", "loop": true },
-    "thinking": { "animations": ["walk"], "loop": true, "swapInterval": 4000 },
-    "pose":     { "animation": "punch", "loop": true, "duration": 5000,
+    "working":  { "animations": ["waiting", "working"], "loop": true, "swapInterval": 3000 },
+    "finished": { "animation": "finished", "loop": true, "duration": 4000,
                   "then": { "animation": "victory", "loop": false, "thenIdle": true } }
   },
   "messages": {
     "idle": ["Waiting...", "..."],
-    "thinking": ["Working on it!", "Hmm..."],
-    "pose": ["Done!", "Victory!"],
+    "working": ["On it!", "Hmm..."],
+    "finished": ["Done!", "Victory!"],
     "greeting": ["Hello!"]
+  },
+  "sounds": {
+    "working": ["sounds/work.wav"],
+    "finished": ["sounds/done.wav"],
+    "greeting": ["sounds/hello.wav"],
+    "victory": ["sounds/win.wav"]
   },
   "effects": {
     "thinkingAura": true,
     "poseParticles": true,
     "particleColor": "#ffd700"
   },
-  "preview": "frame-0.png"
+  "hitArea": { "x": 10, "y": 10, "width": 108, "height": 108 },
+  "preview": "frame_0.png"
 }
 ```
 
-### Key fields
+### Manifest reference
 
 | Field | Description |
 |-------|-------------|
-| `framePattern` | Filename template, `{n}` is replaced by frame number |
-| `animations` | Named animations with `[start, end]` frame range + speed (ms) |
-| `states` | Maps app states (idle/thinking/pose) to animations |
-| `messages` | Speech bubble text pools per state |
-| `effects` | Visual effects (aura glow, particles) |
-| `preview` | Filename used as thumbnail in character select |
-
-## Character Select
-
-Right-click the tray icon → **"Select Character..."** to open the picker. Your selection is saved to `config.json`.
+| `framePattern` | Filename template — `{n}` is replaced by the frame number |
+| `display` | CSS size of the sprite in pixels. Small sprites are upscaled with `image-rendering: pixelated` |
+| `animations` | Named animations with `[startFrame, endFrame]` range and `speed` in ms per frame |
+| `states.idle` | Animation played when Claude is idle |
+| `states.working` | Animation(s) played when Claude is processing. Multiple animations rotate via `swapInterval` |
+| `states.finished` | Played when Claude finishes. `then` chains a follow-up animation before returning to idle |
+| `messages` | Speech bubble text pools — a random message is picked per state |
+| `sounds` | Audio file pools per state (paths relative to sprite folder). Optional |
+| `effects` | `thinkingAura`: radial glow. `poseParticles`: particle burst on finish |
+| `hitArea` | Draggable click zone relative to the sprite's top-left corner |
+| `preview` | Filename used as thumbnail in the character select screen |
 
 ## Architecture
 
@@ -134,20 +189,22 @@ coding-companion/
 ├── main.js          # Electron main process (window, tray, IPC, status watcher)
 ├── index.html       # Renderer (manifest-driven animation engine)
 ├── config.html      # Character selection UI
-├── config.json      # Persisted selection (gitignored)
-├── hooks/           # Shell scripts for Claude Code integration
-│   ├── start-sprite.sh
-│   ├── stop-sprite.sh
-│   └── set-status.sh
+├── config.json      # Persisted selection + position (gitignored)
+├── hooks/
+│   ├── start-sprite.sh   # Launches electron + sets status to working
+│   ├── stop-sprite.sh    # Kills the electron process
+│   └── set-status.sh     # Writes state to status.json
 └── sprites/
     └── <character>/
         ├── manifest.json
         └── *.png frames
 ```
 
-## Note for VSCode/Cursor users
+## Platform notes
 
-The hooks unset `ELECTRON_RUN_AS_NODE` which is set by VSCode/Cursor, allowing Electron to run in GUI mode instead of Node.js mode.
+- **Linux (X11)**: Window uses `-webkit-app-region: drag` for dragging. Position saved via IPC.
+- **macOS**: Tray icon uses `setTemplateImage(true)` for dark/light mode support.
+- **VSCode/Cursor**: Hooks unset `ELECTRON_RUN_AS_NODE` so Electron runs in GUI mode.
 
 ## License
 
