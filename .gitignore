@@ -5,6 +5,5 @@ debug.log
 config.json
 
 # Sprite frame PNGs (copyrighted assets, users add their own)
-sprites/*/Jot_*.png
-sprites/*/*.png
+
 !sprites/*/manifest.json

@@ -1,0 +1,54 @@
+{
+  "name": "Joseph Joestar",
+  "author": "Spriters Resource",
+  "framePattern": "JosephJoestar_0-{n}.png",
+  "display": { "width": 384, "height": 224 },
+  "animations": {
+    "idle":     { "frames": [0, 18],    "speed": 120 },
+    "waiting":  { "frames": [60, 80],   "speed": 100 },
+    "working":  { "frames": [200, 218], "speed": 140 },
+    "finished": { "frames": [300, 320], "speed": 80  },
+    "victory":  { "frames": [700, 720], "speed": 120 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["Your next line is...", "...", "Nigerundayo!", "Heh."],
+    "working": ["Hermit Purple!", "Your next line is...", "...", "OH MY GOD!", "HOLY SHIIIT!", "Next you'll say..."],
+    "finished": ["OVERDRIVE!", "HERMIT PURPLE!", "OH NO!", "SUNLIGHT YELLOW OVERDRIVE!", "NIGERUNDAYOOO!"],
+    "greeting": ["OH MY GOD!"]
+  },
+  "sounds": {
+    "idle": ["sounds/joseph_taunt1.wav", "sounds/joseph_taunt2.wav"],
+    "working": ["sounds/joseph_hermitpurple.wav", "sounds/joseph_hermit.wav", "sounds/joseph_overdrive.wav"],
+    "finished": ["sounds/joseph_attack1.wav", "sounds/joseph_attack2.wav", "sounds/joseph_attack3.wav", "sounds/joseph_attack4.wav", "sounds/joseph_attack5.wav"],
+    "greeting": ["sounds/joseph_roundstart1.wav", "sounds/joseph_roundstart2.wav", "sounds/joseph_roundstart3.wav"],
+    "victory": ["sounds/joseph_taunt1.wav", "sounds/joseph_taunt2.wav"]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#c850f0"
+  },
+  "hitArea": { "x": 140, "y": 55, "width": 165, "height": 130 },
+  "preview": "JosephJoestar_0-0.png"
+}

@@ -1,0 +1,48 @@
+{
+  "name": "Slime",
+  "author": "Sprite Sheet",
+  "framePattern": "slime_{n}.png",
+  "display": { "width": 224, "height": 224 },
+  "displayScale": 4,
+  "animations": {
+    "idle":     { "frames": [0, 5],   "speed": 250 },
+    "waiting":  { "frames": [6, 11],  "speed": 150 },
+    "working":  { "frames": [6, 11],  "speed": 150 },
+    "finished": { "frames": [12, 17], "speed": 120 },
+    "victory":  { "frames": [0, 5],   "speed": 250 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["*jiggles*", "...", "*wobbles softly*"],
+    "working": ["*bounce bounce*", "*squish*", "...", "*boing boing*", "*wobble*"],
+    "finished": ["*SPLAT!*", "*BOING!*", "*SQUISH ATTACK!*", "*JIGGLE SMASH!*"],
+    "greeting": ["*boing!*"]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#7b68ee"
+  },
+  "hitArea": { "x": 40, "y": 40, "width": 140, "height": 140 },
+  "preview": "slime_0.png"
+}

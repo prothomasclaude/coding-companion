@@ -1,0 +1,48 @@
+{
+  "name": "Monkey D. Luffy",
+  "author": "Spriters Resource",
+  "framePattern": "luffy_{n}.png",
+  "display": { "width": 214, "height": 280 },
+  "displayScale": 5,
+  "animations": {
+    "idle":     { "frames": [0, 6],   "speed": 150 },
+    "waiting":  { "frames": [7, 12],  "speed": 120 },
+    "working":  { "frames": [21, 28], "speed": 100 },
+    "finished": { "frames": [13, 20], "speed": 80 },
+    "victory":  { "frames": [29, 34], "speed": 140 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["Shishishi!", "...", "Meat!", "I'm gonna be King of the Pirates!"],
+    "working": ["Gomu Gomu no...", "Shishishi!", "...", "Let's go!", "Yosh!"],
+    "finished": ["GOMU GOMU NO PISTOL!", "GATLING!", "GOMU GOMU NO..!", "GUM GUM BAZOOKA!"],
+    "greeting": ["I'm Luffy! The man who'll become King of the Pirates!"]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#ff4444"
+  },
+  "hitArea": { "x": 47, "y": 50, "width": 120, "height": 200 },
+  "preview": "luffy_0.png"
+}

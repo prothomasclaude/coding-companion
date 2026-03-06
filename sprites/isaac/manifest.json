@@ -1,0 +1,48 @@
+{
+  "name": "Isaac",
+  "author": "Spriters Resource",
+  "framePattern": "isaac_{n}.png",
+  "display": { "width": 112, "height": 180 },
+  "displayScale": 4,
+  "animations": {
+    "idle":     { "frames": [0, 7],   "speed": 250 },
+    "waiting":  { "frames": [8, 15],  "speed": 200 },
+    "working":  { "frames": [16, 21], "speed": 200 },
+    "finished": { "frames": [22, 27], "speed": 180 },
+    "victory":  { "frames": [28, 35], "speed": 160 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["*sniff*", "...", "*stares*"],
+    "working": ["*crying*", "Mom please...", "...", "*whimper*", "I'm scared..."],
+    "finished": ["*angelic form*", "*transcending*", "THE LIGHT!", "*divine tears*"],
+    "greeting": ["*stares blankly*"]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#add8e6"
+  },
+  "hitArea": { "x": 6, "y": 10, "width": 100, "height": 160 },
+  "preview": "isaac_0.png"
+}

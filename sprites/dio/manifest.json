@@ -1,0 +1,54 @@
+{
+  "name": "DIO",
+  "author": "Spriters Resource",
+  "framePattern": "DIO_0-{n}.png",
+  "display": { "width": 384, "height": 224 },
+  "animations": {
+    "idle":     { "frames": [0, 30],    "speed": 120 },
+    "waiting":  { "frames": [40, 58],   "speed": 100 },
+    "working":  { "frames": [350, 370], "speed": 140 },
+    "finished": { "frames": [690, 710], "speed": 80  },
+    "victory":  { "frames": [490, 510], "speed": 120 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "messages": {
+    "idle": ["WRYYYYY...", "...", "Kono DIO da!", "Hmph."],
+    "working": ["MUDA MUDA MUDA...", "Kono DIO da...", "...", "The World!", "WRYYYYY!", "Useless, useless..."],
+    "finished": ["MUDA MUDA MUDA MUDA!", "THE WORLD!", "WRYYYYY!", "MUDAMUDAMUDAMUDA!", "ZA WARUDO!"],
+    "greeting": ["Kono DIO da!"]
+  },
+  "sounds": {
+    "idle": ["sounds/Taunt.wav"],
+    "working": ["sounds/The World.wav", "sounds/Knives Charge.wav", "sounds/Stand On.wav"],
+    "finished": ["sounds/Blazing Fists.wav", "sounds/Blazing Strike.wav", "sounds/Urrrrryyyyy.wav", "sounds/Road Roller.wav"],
+    "greeting": ["sounds/Intro 1.wav", "sounds/Intro 2.wav"],
+    "victory": ["sounds/Win.wav", "sounds/Laugh.wav", "sounds/Laugh 2.wav"]
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#ffcc00"
+  },
+  "hitArea": { "x": 140, "y": 55, "width": 165, "height": 130 },
+  "preview": "DIO_0-0.png"
+}
