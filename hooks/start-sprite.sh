@@ -7,14 +7,14 @@ PID_FILE="$SPRITE_DIR/sprite.pid"
 if [ -f "$PID_FILE" ]; then
   PID=$(cat "$PID_FILE")
   if kill -0 "$PID" 2>/dev/null; then
-    # Already running, just set thinking
-    "$SPRITE_DIR/hooks/set-status.sh" thinking
+    # Already running, just set working
+    "$SPRITE_DIR/hooks/set-status.sh" working
     exit 0
   fi
 fi
 
 # Set initial status
-"$SPRITE_DIR/hooks/set-status.sh" thinking
+"$SPRITE_DIR/hooks/set-status.sh" working
 
 # Find Electron binary (cross-platform)
 cd "$SPRITE_DIR"
