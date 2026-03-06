@@ -20,10 +20,13 @@
       display: flex;
       align-items: flex-end;
       justify-content: center;
+      padding-bottom: 4px;
+
     }
 
     #sprite-wrapper {
       position: relative;
+
     }
 
     #drag-handle {
@@ -40,13 +43,14 @@
     #sprite {
       image-rendering: pixelated;
       image-rendering: crisp-edges;
-      object-fit: contain;
       pointer-events: none;
+      transform-origin: bottom center;
+      object-fit: contain;
     }
 
     #speech-bubble {
       position: absolute;
-      bottom: 200px;
+      top: -40px;
       left: 50%;
       transform: translateX(-50%);
       background: white;
@@ -57,6 +61,9 @@
       padding: 4px 12px;
       border-radius: 10px;
       white-space: nowrap;
+      max-width: 340px;
+      overflow: hidden;
+      text-overflow: ellipsis;
       box-shadow: 0 2px 8px rgba(0,0,0,0.2);
       border: 1.5px solid #e0e0e0;
       opacity: 0;
@@ -114,9 +121,9 @@
 </head>
 <body>
   <div id="container">
-    <div id="speech-bubble"></div>
     <div id="aura" class="thinking-aura" style="display:none"></div>
     <div id="sprite-wrapper">
+      <div id="speech-bubble"></div>
       <div id="drag-handle"></div>
       <img id="sprite" src="" alt="Companion">
     </div>
@@ -132,15 +139,12 @@
     const fs = require('fs');
     const { ipcRenderer } = require('electron');
 
-    // ===== Drag support =====
-    // -webkit-app-region: drag handles native window dragging via CSS.
-    // IPC fallback for position persistence.
-
     // ===== State =====
     let manifest = null;
     let spritesDir = '';
     let anims = {};
     let messages = {};
+    let sounds = {};
     let effects = {};
     let stateConfig = {};
 
@@ -151,6 +155,7 @@
     let bubbleTimer = null;
     let poseTimer = null;
     let swapTimer = null;
+    let currentAudio = null;
 
     // ===== Helpers =====
     function range(start, end) {
@@ -189,10 +194,11 @@
       }
 
       messages = manifest.messages || {};
+      sounds = manifest.sounds || {};
       effects = manifest.effects || {};
       stateConfig = manifest.states || {};
 
-      // Apply display size
+      // Apply display size — browser upscales small sprites via image-rendering: pixelated
       spriteEl.style.width = manifest.display.width + 'px';
       spriteEl.style.height = manifest.display.height + 'px';
 
@@ -205,15 +211,11 @@
         dragHandle.style.width = hit.width + 'px';
         dragHandle.style.height = hit.height + 'px';
       } else {
-        // Fallback: cover entire sprite
         dragHandle.style.left = '0';
         dragHandle.style.top = '0';
         dragHandle.style.width = manifest.display.width + 'px';
         dragHandle.style.height = manifest.display.height + 'px';
       }
-
-      // Position speech bubble above sprite
-      bubble.style.bottom = (manifest.display.height - 20) + 'px';
 
       preloadFrames();
     }
@@ -257,6 +259,20 @@
       bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), 2500);
     }
 
+    // ===== Audio =====
+    function playSound(pool) {
+      if (!pool || pool.length === 0) return;
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio = null;
+      }
+      const file = pool[Math.floor(Math.random() * pool.length)];
+      const src = 'file://' + path.join(spritesDir, file);
+      currentAudio = new Audio(src);
+      currentAudio.volume = 0.5;
+      currentAudio.play().catch(() => {});
+    }
+
     // ===== Particles =====
     function spawnParticle() {
       const particle = document.createElement('div');
@@ -280,32 +296,34 @@
 
       if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
 
-      if (newState === 'thinking') {
-        const cfg = stateConfig.thinking || {};
+      if (newState === 'working') {
+        const cfg = stateConfig.working || {};
         if (effects.thinkingAura) aura.style.display = 'block';
 
-        const thinkAnims = cfg.animations || ['idle'];
-        const pick = thinkAnims[Math.floor(Math.random() * thinkAnims.length)];
+        const workAnims = cfg.animations || ['idle'];
+        const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
         playAnim(pick, cfg.loop !== false);
-        showBubble(messages.thinking);
+        showBubble(messages.working);
+        playSound(sounds.working);
 
-        if (cfg.swapInterval && thinkAnims.length > 1) {
+        if (cfg.swapInterval && workAnims.length > 1) {
           swapTimer = setInterval(() => {
-            const next = thinkAnims[Math.floor(Math.random() * thinkAnims.length)];
+            const next = workAnims[Math.floor(Math.random() * workAnims.length)];
             currentAnim = '';
             playAnim(next, true);
-            if (Math.random() < 0.3) showBubble(messages.thinking);
+            if (Math.random() < 0.3) showBubble(messages.working);
           }, cfg.swapInterval);
         }
       } else if (newState === 'idle') {
         aura.style.display = 'none';
 
-        if (prevState === 'thinking') {
-          const poseCfg = stateConfig.pose || {};
-          currentState = 'pose';
+        if (prevState === 'working') {
+          const finishedCfg = stateConfig.finished || {};
+          currentState = 'finished';
           if (effects.thinkingAura) aura.style.display = 'block';
-          playAnim(poseCfg.animation || 'idle', poseCfg.loop !== false);
-          showBubble(messages.pose);
+          playAnim(finishedCfg.animation || 'idle', finishedCfg.loop !== false);
+          showBubble(messages.finished);
+          playSound(sounds.finished);
 
           if (effects.poseParticles) {
             for (let i = 0; i < 8; i++) {
@@ -318,9 +336,10 @@
             currentState = 'idle';
             aura.style.display = 'none';
 
-            const then = poseCfg.then;
+            const then = finishedCfg.then;
             if (then) {
               playAnim(then.animation, then.loop !== undefined ? then.loop : false);
+              playSound(sounds.victory);
               if (then.thenIdle) {
                 const thenAnim = anims[then.animation];
                 const duration = thenAnim ? thenAnim.frameNums.length * thenAnim.speed + 200 : 2000;
@@ -336,7 +355,7 @@
               playAnim(idleCfg.animation || 'idle', true);
             }
             showBubble(messages.idle);
-          }, poseCfg.duration || 5000);
+          }, finishedCfg.duration || 5000);
         } else {
           const idleCfg = stateConfig.idle || {};
           playAnim(idleCfg.animation || 'idle', true);
@@ -348,8 +367,8 @@
     // Random bubbles
     setInterval(() => {
       if (currentState === 'idle' && Math.random() < 0.15) showBubble(messages.idle);
-      if (currentState === 'pose' && Math.random() < 0.3) {
-        showBubble(messages.pose);
+      if (currentState === 'finished' && Math.random() < 0.3) {
+        showBubble(messages.finished);
         if (effects.poseParticles) spawnParticle();
       }
     }, 3000);
@@ -359,6 +378,7 @@
       if (animTimer) clearInterval(animTimer);
       if (swapTimer) clearInterval(swapTimer);
       if (poseTimer) clearTimeout(poseTimer);
+      if (currentAudio) { currentAudio.pause(); currentAudio = null; }
       currentAnim = '';
       currentState = 'idle';
 
@@ -369,6 +389,7 @@
         playAnim(idleCfg.animation || 'idle', true);
         spriteEl.style.opacity = '1';
         showBubble(messages.greeting || messages.idle);
+        playSound(sounds.greeting);
       }, 200);
     };
 
@@ -378,7 +399,10 @@
       spriteEl.style.transition = 'opacity 0.2s ease';
       const idleCfg = stateConfig.idle || {};
       playAnim(idleCfg.animation || 'idle', true);
-      setTimeout(() => showBubble(messages.greeting || messages.idle), 1000);
+      setTimeout(() => {
+        showBubble(messages.greeting || messages.idle);
+        playSound(sounds.greeting);
+      }, 1000);
     };
   </script>
 </body>

@@ -4,26 +4,26 @@
   "framePattern": "Jot_0-{n}.png",
   "display": { "width": 384, "height": 224 },
   "animations": {
-    "idle":    { "frames": [0, 17],    "speed": 120 },
-    "walk":    { "frames": [40, 50],   "speed": 100 },
-    "punch":   { "frames": [700, 712], "speed": 80  },
-    "victory": { "frames": [160, 172], "speed": 120 },
-    "crouch":  { "frames": [550, 558], "speed": 140 }
+    "idle":     { "frames": [0, 17],    "speed": 120 },
+    "waiting":  { "frames": [40, 50],   "speed": 100 },
+    "working":  { "frames": [550, 558], "speed": 140 },
+    "finished": { "frames": [700, 712], "speed": 80  },
+    "victory":  { "frames": [160, 172], "speed": 120 }
   },
   "states": {
     "idle": {
       "animation": "idle",
       "loop": true
     },
-    "thinking": {
-      "animations": ["walk", "crouch"],
+    "working": {
+      "animations": ["waiting", "working"],
       "loop": true,
-      "swapInterval": 4000
+      "swapInterval": 3000
     },
-    "pose": {
-      "animation": "punch",
+    "finished": {
+      "animation": "finished",
       "loop": true,
-      "duration": 5000,
+      "duration": 4000,
       "then": {
         "animation": "victory",
         "loop": false,
@@ -33,9 +33,16 @@
   },
   "messages": {
     "idle": ["やれやれだぜ...", "...", "Waiting."],
-    "thinking": ["やれやれだぜ...", "Yare yare daze...", "...", "Good grief...", "Working on it.", "Star Platinum!"],
-    "pose": ["ORA ORA ORA ORA!", "STAR PLATINUM!", "ORA!", "ORAORAORAORAORA!"],
+    "working": ["やれやれだぜ...", "Yare yare daze...", "...", "Good grief...", "Working on it.", "Star Platinum!"],
+    "finished": ["ORA ORA ORA ORA!", "STAR PLATINUM!", "ORA!", "ORAORAORAORAORA!"],
     "greeting": ["やれやれだぜ..."]
+  },
+  "sounds": {
+    "idle": ["sounds/Taunt 1.wav", "sounds/Taunt 2.wav"],
+    "working": ["sounds/Stand On.wav", "sounds/Star Finger 1.wav", "sounds/Super Charge.wav"],
+    "finished": ["sounds/Ora 1.wav", "sounds/Blazing Fists.wav", "sounds/Star Breaker.wav"],
+    "greeting": ["sounds/Intro.wav"],
+    "victory": ["sounds/Win 1.wav", "sounds/Win 2_1.wav"]
   },
   "effects": {
     "thinkingAura": true,

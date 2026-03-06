@@ -66,7 +66,7 @@ function createWindow() {
   const spriteSize = manifest.display || { width: 384, height: 224 };
 
   // Window = sprite size + padding for speech bubble above
-  const winWidth = spriteSize.width + 40;
+  const winWidth = Math.max(spriteSize.width, 350);
   const winHeight = spriteSize.height + 80;
 
   // Restore saved position or default to bottom-right
@@ -90,15 +90,9 @@ function createWindow() {
     },
   });
 
-  // Set click-through shape: only the hitArea receives mouse events,
-  // everything else passes clicks to windows behind
-  const hit = manifest.hitArea;
-  if (hit) {
-    // hitArea is relative to sprite; sprite is centered in window
-    const offsetX = Math.round((winWidth - spriteSize.width) / 2) + hit.x;
-    const offsetY = winHeight - spriteSize.height + hit.y;
-    mainWindow.setShape([{ x: offsetX, y: offsetY, width: hit.width, height: hit.height }]);
-  }
+  // Make the entire window visible — click-through is handled by the
+  // transparent background; drag is handled by -webkit-app-region on #drag-handle
+  mainWindow.setShape([{ x: 0, y: 0, width: winWidth, height: winHeight }]);
 
   mainWindow.loadFile("index.html");
 
@@ -210,6 +204,19 @@ ipcMain.handle("select-sprite", (_event, spriteId) => {
   saveConfig(config);
 
   if (mainWindow && !mainWindow.isDestroyed()) {
+    const manifest = getSpriteManifest(spriteId);
+    const spriteSize = manifest.display || { width: 384, height: 224 };
+    const winWidth = Math.max(spriteSize.width, 350);
+    const winHeight = spriteSize.height + 80;
+
+    // On X11, resizable:false locks min/max size hints so setSize is ignored.
+    // Temporarily enable resizable, resize, then lock again.
+    mainWindow.setResizable(true);
+    mainWindow.setSize(winWidth, winHeight);
+    mainWindow.setResizable(false);
+
+    mainWindow.setShape([{ x: 0, y: 0, width: winWidth, height: winHeight }]);
+
     mainWindow.webContents.executeJavaScript(
       `window.reloadSprite && window.reloadSprite("${spriteId}")`,
     );
