@@ -2,13 +2,13 @@
   "name": "Peon",
   "author": "Spriters Resource",
   "framePattern": "peon_{n}.png",
-  "display": { "width": 122, "height": 135 },
+  "display": { "width": 34, "height": 43 },
   "animations": {
-    "idle": { "frames": [0, 4], "speed": 180 },
-    "waiting": { "frames": [5, 9], "speed": 140 },
-    "working": { "frames": [25, 34], "speed": 100 },
+    "idle": { "frames": [0, 0], "speed": 180 },
+    "waiting": { "frames": [1, 4], "speed": 140 },
+    "working": { "frames": [5, 9], "speed": 100 },
     "finished": { "frames": [10, 14], "speed": 150 },
-    "victory": { "frames": [50, 54], "speed": 160 }
+    "victory": { "frames": [15, 19], "speed": 160 }
   },
   "states": {
     "idle": {
@@ -47,6 +47,36 @@
       "Work complete!"
     ],
     "greeting": ["Something need doing?"]
+  },
+  "sounds": {
+    "idle": [
+      "sounds/PeonWhat1.wav",
+      "sounds/PeonWhat2.wav",
+      "sounds/PeonWhat3.wav",
+      "sounds/PeonWhat4.wav"
+    ],
+    "working": [
+      "sounds/PeonYes1.wav",
+      "sounds/PeonYes2.wav",
+      "sounds/PeonYes3.wav",
+      "sounds/PeonYes4.wav",
+      "sounds/PeonYesAttack3.wav"
+    ],
+    "finished": [
+      "sounds/PeonWorkComplete.wav",
+      "sounds/PeonAngry1.wav",
+      "sounds/PeonAngry2.wav",
+      "sounds/PeonAngry3.wav",
+      "sounds/PeonAngry4.wav"
+    ],
+    "greeting": [
+      "sounds/PeonReady1.wav",
+      "sounds/PeonWhat4.wav"
+    ],
+    "victory": [
+      "sounds/PeonWorkComplete.wav",
+      "sounds/PeonWarcry1.wav"
+    ]
   },
   "effects": {
     "thinkingAura": true,
