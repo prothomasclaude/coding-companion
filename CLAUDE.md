@@ -67,6 +67,39 @@ npm install
 - **Stager les fichiers specifiquement** par nom — eviter `git add .` ou `git add -A`
 - **Remote:** `git@github-prothomasclaude:prothomasclaude/coding-companion.git` (SSH alias for prothomasclaude account)
 
+## Adding Sprite Packs
+
+### Frame Requirements
+
+- **All frames must have identical dimensions** — use a transparent canvas padded to the largest frame's bounding box
+- **Bottom-align** sprites on the canvas so feet stay grounded across frames
+- Use Python PIL to normalize: find max width/height, center horizontally, align bottom vertically
+- `display.width` and `display.height` in manifest must match actual frame dimensions
+
+### Manifest Structure
+
+- `animations` — named clip ranges with `[startFrame, endFrame]` and `speed` (ms per frame)
+- `states` — maps app states (`idle`, `working`, `finished`) to animations with loop/chain behavior
+- `messages` — random text lines per state shown in speech bubble
+- `sounds` — (optional) audio files per state in a `sounds/` subfolder
+- `effects` — (optional) visual effects like `thinkingAura`, `poseParticles`
+
+### State Mapping (Claude Code → Sprite)
+
+| Hook Event | State | Typical Animation |
+|---|---|---|
+| `SessionStart` / `UserPromptSubmit` | `working` | character actively doing something |
+| `Stop` / `SessionEnd` | `finished` | task complete, celebration |
+| Default / timeout | `idle` | standing, breathing, waiting |
+
+### Checklist for New Sprite Packs
+
+1. Extract frames from spritesheet → individual PNGs
+2. Normalize all frames to uniform canvas size (bottom-aligned)
+3. Name frames sequentially: `{prefix}_{n}.png` starting at 0
+4. Create `manifest.json` with correct frame ranges and display size
+5. Test all states: `./hooks/set-status.sh idle|working|finished`
+
 ## Platform Notes
 
 - **Linux:** `setIgnoreMouseEvents(true, { forward: true })` and `screen.getCursorScreenPoint()` don't work reliably on X11. Window is sized to sprite and uses `-webkit-app-region: drag` instead.
