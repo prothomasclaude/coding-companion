@@ -1,61 +1,83 @@
 {
   "name": "Peasant",
-  "author": "Spriters Resource",
+  "author": "Blizzard / Spriters Resource",
   "framePattern": "peasant_{n}.png",
-  "display": { "width": 102, "height": 105 },
+  "display": { "width": 120, "height": 123 },
   "animations": {
-    "idle": { "frames": [0, 0], "speed": 180 },
-    "waiting": { "frames": [1, 4], "speed": 140 },
-    "working": { "frames": [5, 9], "speed": 100 },
-    "finished": { "frames": [10, 14], "speed": 150 },
-    "victory": { "frames": [15, 19], "speed": 160 }
+    "idle": { "frames": [0, 0], "speed": 200 },
+    "idle_look_right": { "frames": [0, 56, 56, 0], "speed": 350 },
+    "idle_look_left": { "frames": [0, 5, 5, 0], "speed": 350 },
+    "walk_down": { "frames": [1, 4], "speed": 160 },
+    "chop": { "frames": [60, 64], "speed": 120 },
+    "build": { "frames": [85, 89], "speed": 140 },
+    "attack": { "frames": [29, 34], "speed": 110 },
+    "carry_gold": { "frames": [70, 74], "speed": 150 },
+    "carry_wood": { "frames": [75, 79], "speed": 150 },
+    "death": { "frames": [49, 55], "speed": 140 }
   },
   "states": {
     "idle": {
-      "animation": "idle",
-      "loop": true
+      "animations": ["idle", "idle", "idle", "idle_look_right", "idle_look_left"],
+      "loop": true,
+      "swapInterval": 5000
     },
     "working": {
-      "animations": ["waiting", "working"],
+      "animations": ["chop", "build", "attack"],
       "loop": true,
-      "swapInterval": 3000
+      "swapInterval": 3500
     },
     "finished": {
-      "animation": "finished",
+      "animation": "carry_gold",
       "loop": true,
       "duration": 4000,
       "then": {
-        "animation": "victory",
+        "animation": "carry_wood",
         "loop": false,
         "thenIdle": true
       }
     }
   },
+  "poke": {
+    "deathAfter": 5,
+    "deathAnimation": "death",
+    "deathDuration": 3000
+  },
   "lines": {
     "en": {
       "idle": [
-        { "text": "Your command?", "sound": null },
-        { "text": "Yes, milord?", "sound": null },
-        { "text": "What is it?", "sound": null },
-        { "text": "More work?", "sound": null }
+        { "text": "Your command?" },
+        { "text": "Yes, milord?" },
+        { "text": "What is it?" },
+        { "text": "More work?" }
       ],
       "working": [
-        { "text": "Right-o.", "sound": null },
-        { "text": "Yes, milord.", "sound": null },
-        { "text": "As you wish.", "sound": null },
-        { "text": "Alright then.", "sound": null }
+        { "text": "Right-o." },
+        { "text": "Yes, milord." },
+        { "text": "As you wish." },
+        { "text": "Alright then." }
       ],
       "finished": [
-        { "text": "Job's done!", "sound": null },
-        { "text": "All done!", "sound": null },
-        { "text": "Work complete!", "sound": null }
+        { "text": "Job's done!" },
+        { "text": "All done!" },
+        { "text": "Work complete!" }
       ],
       "greeting": [
-        { "text": "Ready to work!", "sound": null }
+        { "text": "Ready to work!" }
       ],
       "victory": [
-        { "text": "Job's done!", "sound": null },
-        { "text": "For the Alliance!", "sound": null }
+        { "text": "Job's done!" },
+        { "text": "For the Alliance!" }
+      ],
+      "poke": [
+        { "text": "Stop poking me!" },
+        { "text": "What?!" },
+        { "text": "Why do you keep touching me?" },
+        { "text": "Leave me alone!" }
+      ],
+      "death": [
+        { "text": "That's it, I'm dead..." },
+        { "text": "AAAARGH!" },
+        { "text": "You killed me!" }
       ]
     },
     "fr": {
@@ -92,6 +114,17 @@
         { "text": "Travail terminé !", "sound": "sounds/PeasantWorkComplete_fr.wav" },
         { "text": "HaAaAaAa !", "sound": "sounds/PeasantWarcry1_fr.wav" },
         { "text": "GAAAAAARDE !", "sound": "sounds/PeasantWarcry2_fr.wav" }
+      ],
+      "poke": [
+        { "text": "Arrête de me toucher !" },
+        { "text": "Quoi encore ?!" },
+        { "text": "Laisse-moi tranquille !" },
+        { "text": "Mais arrête !" }
+      ],
+      "death": [
+        { "text": "Ça y est, je suis mooooort...", "sound": "sounds/PeasantDeath1_fr.wav" },
+        { "text": "AAAARGH !", "sound": "sounds/PeasantWarcry2_fr.wav" },
+        { "text": "Tu m'as tué !", "sound": "sounds/PeasantWarcry1_fr.wav" }
       ]
     }
   },
@@ -100,6 +133,6 @@
     "poseParticles": true,
     "particleColor": "#1E90FF"
   },
-  "hitArea": { "x": 6, "y": 6, "width": 90, "height": 93 },
+  "hitArea": { "x": 15, "y": 10, "width": 90, "height": 110 },
   "preview": "peasant_0.png"
 }
