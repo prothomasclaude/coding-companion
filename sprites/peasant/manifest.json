@@ -1,0 +1,105 @@
+{
+  "name": "Peasant",
+  "author": "Spriters Resource",
+  "framePattern": "peasant_{n}.png",
+  "display": { "width": 102, "height": 105 },
+  "animations": {
+    "idle": { "frames": [0, 0], "speed": 180 },
+    "waiting": { "frames": [1, 4], "speed": 140 },
+    "working": { "frames": [5, 9], "speed": 100 },
+    "finished": { "frames": [10, 14], "speed": 150 },
+    "victory": { "frames": [15, 19], "speed": 160 }
+  },
+  "states": {
+    "idle": {
+      "animation": "idle",
+      "loop": true
+    },
+    "working": {
+      "animations": ["waiting", "working"],
+      "loop": true,
+      "swapInterval": 3000
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 4000,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "lines": {
+    "en": {
+      "idle": [
+        { "text": "Your command?", "sound": null },
+        { "text": "Yes, milord?", "sound": null },
+        { "text": "What is it?", "sound": null },
+        { "text": "More work?", "sound": null }
+      ],
+      "working": [
+        { "text": "Right-o.", "sound": null },
+        { "text": "Yes, milord.", "sound": null },
+        { "text": "As you wish.", "sound": null },
+        { "text": "Alright then.", "sound": null }
+      ],
+      "finished": [
+        { "text": "Job's done!", "sound": null },
+        { "text": "All done!", "sound": null },
+        { "text": "Work complete!", "sound": null }
+      ],
+      "greeting": [
+        { "text": "Ready to work!", "sound": null }
+      ],
+      "victory": [
+        { "text": "Job's done!", "sound": null },
+        { "text": "For the Alliance!", "sound": null }
+      ]
+    },
+    "fr": {
+      "idle": [
+        { "text": "Qu'y a-t-il ?", "sound": "sounds/PeasantWhat1_fr.wav" },
+        { "text": "Encore du travail ?", "sound": "sounds/PeasantWhat2_fr.wav" },
+        { "text": "Pardon ?", "sound": "sounds/PeasantWhat3_fr.wav" },
+        { "text": "Vous n'avez personne d'autre ?", "sound": "sounds/PeasantWhat4_fr.wav" }
+      ],
+      "working": [
+        { "text": "Oui messire.", "sound": "sounds/PeasantYes1_fr.wav" },
+        { "text": "Bien.", "sound": "sounds/PeasantYes2_fr.wav" },
+        { "text": "Oui monseigneuuuur.", "sound": "sounds/PeasantYes3_fr.wav" },
+        { "text": "Très bieeeen.", "sound": "sounds/PeasantYes4_fr.wav" },
+        { "text": "Je m'en charge.", "sound": "sounds/PeasantYes5_fr.wav" },
+        { "text": "Je peux essayer.", "sound": "sounds/PeasantYes6_fr.wav" },
+        { "text": "Si vous l'voulez vraiment.", "sound": "sounds/PeasantYes7_fr.wav" }
+      ],
+      "finished": [
+        { "text": "Travail terminé !", "sound": "sounds/PeasantWorkComplete_fr.wav" },
+        { "text": "Votre prénom c'est François ?", "sound": "sounds/PeasantAngry1_fr.wav" },
+        { "text": "C'est juste, il est beau !", "sound": "sounds/PeasantAngry2_fr.wav" },
+        { "text": "C'est un champion du monde !", "sound": "sounds/PeasantAngry3_fr.wav" },
+        { "text": "Il pourrait refaire l'historique de la louche à travers les âges.", "sound": "sounds/PeasantAngry4_fr.wav" },
+        { "text": "Ne m'invitez jamais à dîner.", "sound": "sounds/PeasantAngry5_fr.wav" },
+        { "text": "J'aurais toujours un doute.", "sound": "sounds/PeasantAngry6_fr.wav" },
+        { "text": "Il essaie de faire de l'humour.", "sound": "sounds/PeasantAngry7_fr.wav" },
+        { "text": "Écoutez ça c'est pathétique.", "sound": "sounds/PeasantAngry8_fr.wav" }
+      ],
+      "greeting": [
+        { "text": "Prêt à travailler !", "sound": "sounds/PeasantReady1_fr.wav" }
+      ],
+      "victory": [
+        { "text": "Travail terminé !", "sound": "sounds/PeasantWorkComplete_fr.wav" },
+        { "text": "HaAaAaAa !", "sound": "sounds/PeasantWarcry1_fr.wav" },
+        { "text": "GAAAAAARDE !", "sound": "sounds/PeasantWarcry2_fr.wav" }
+      ]
+    }
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#1E90FF"
+  },
+  "hitArea": { "x": 6, "y": 6, "width": 90, "height": 93 },
+  "preview": "peasant_0.png"
+}
