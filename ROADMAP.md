@@ -31,7 +31,7 @@ Au lieu de couper net entre états, jouer une animation de passage (ex: le peon 
 - `index.html` : dans `updateState()`, jouer la transition avant de lancer l'état cible
 - Sprites : créer les frames de transition
 
-### 1.4 `[ ]` Réactions contextuelles aux hooks
+### 1.4 `[x]` Réactions contextuelles aux hooks
 Étendre le status.json pour transporter un `context` en plus de `state`, permettant au sprite de réagir différemment selon l'action (erreur, commit, test fail, écriture de fichier).
 
 **Changements :**
@@ -40,6 +40,8 @@ Au lieu de couper net entre états, jouer une animation de passage (ex: le peon 
 - `main.js` : transmettre le context au renderer
 - `index.html` : si un context est présent, jouer une animation/ligne spécifique (sprite triste sur erreur, célébration sur commit)
 - Manifest : nouveau champ `contexts` avec animations/lignes dédiées
+
+**Statut :** Implémenté. Pipeline complet : set-status.sh → status.json → main.js → index.html. Peasant configuré avec contexts `error` et `commit`.
 
 ---
 

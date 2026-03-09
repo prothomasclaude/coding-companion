@@ -15,8 +15,9 @@
   },
   "states": {
     "idle": {
-      "animation": "idle",
-      "loop": true
+      "animations": ["idle", "idle_look_right", "idle_look_left"],
+      "loop": true,
+      "swapInterval": 4000
     },
     "working": {
       "animation": "chop",
@@ -32,6 +33,9 @@
         "thenIdle": true
       }
     }
+  },
+  "transitions": {
+    "idle→working": "walk"
   },
   "poke": {
     "deathAfter": 5,
@@ -162,6 +166,25 @@
         { "text": "AAAARGH !", "sound": "sounds/PeasantWarcry2_fr.wav" },
         { "text": "Tu m'as tué !", "sound": "sounds/PeasantWarcry1_fr.wav" }
       ]
+    }
+  },
+  "contexts": {
+    "error": {
+      "animation": "death",
+      "lines": {
+        "working": [
+          { "text": "Something went wrong..." },
+          { "text": "Uh oh, that's not good." }
+        ]
+      }
+    },
+    "commit": {
+      "lines": {
+        "working": [
+          { "text": "Saving progress!" },
+          { "text": "Another one done!" }
+        ]
+      }
     }
   },
   "effects": {

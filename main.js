@@ -366,13 +366,20 @@ function ensureStatusFile() {
 
 function watchStatus() {
   let lastState = "idle";
+  let lastContext = "";
+  let lastTimestamp = 0;
   const checkStatus = () => {
     try {
       const data = JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
-      if (data.state !== lastState) {
+      const context = data.context || "";
+      const ts = data.timestamp || 0;
+      if (data.state !== lastState || context !== lastContext || ts !== lastTimestamp) {
         lastState = data.state;
+        lastContext = context;
+        lastTimestamp = ts;
+        const escaped = context.replace(/[^a-zA-Z0-9_]/g, '');
         mainWindow?.webContents?.executeJavaScript(
-          `window.updateState && window.updateState("${data.state}")`,
+          `window.updateState && window.updateState("${data.state}", "${escaped}")`,
         );
       }
     } catch {}
