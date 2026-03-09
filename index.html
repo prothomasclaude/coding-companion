@@ -336,6 +336,10 @@
 
       if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
 
+      // Always clear poseTimer when entering any new state — prevents
+      // a lingering finished→idle transition from overriding the new state
+      if (poseTimer) { clearTimeout(poseTimer); poseTimer = null; }
+
       if (newState === 'working') {
         const cfg = stateConfig.working || {};
         if (effects.thinkingAura) aura.style.display = 'block';
