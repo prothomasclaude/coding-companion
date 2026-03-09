@@ -4,27 +4,23 @@
   "framePattern": "peasant_{n}.png",
   "display": { "width": 120, "height": 123 },
   "animations": {
-    "idle": { "frames": [0, 0], "speed": 200 },
+    "idle": { "frames": [55, 55], "speed": 200 },
     "idle_look_right": { "frames": [0, 56, 56, 0], "speed": 350 },
     "idle_look_left": { "frames": [0, 5, 5, 0], "speed": 350 },
-    "walk_down": { "frames": [1, 4], "speed": 160 },
-    "chop": { "frames": [60, 64], "speed": 120 },
-    "build": { "frames": [85, 89], "speed": 140 },
-    "attack": { "frames": [29, 34], "speed": 110 },
-    "carry_gold": { "frames": [70, 74], "speed": 150 },
-    "carry_wood": { "frames": [75, 79], "speed": 150 },
-    "death": { "frames": [49, 55], "speed": 140 }
+    "walk": { "frames": [0, 4], "speed": 160 },
+    "chop": { "frames": [25, 29], "speed": 120 },
+    "carry_gold": { "frames": [60, 64], "speed": 150 },
+    "carry_wood": { "frames": [85, 89], "speed": 150 },
+    "death": { "frames": [50, 54], "speed": 160 }
   },
   "states": {
     "idle": {
-      "animations": ["idle", "idle", "idle", "idle_look_right", "idle_look_left"],
-      "loop": true,
-      "swapInterval": 5000
+      "animation": "idle",
+      "loop": true
     },
     "working": {
-      "animations": ["chop", "build", "attack"],
-      "loop": true,
-      "swapInterval": 3500
+      "animation": "chop",
+      "loop": true
     },
     "finished": {
       "animation": "carry_gold",
@@ -61,13 +57,8 @@
         { "text": "All done!" },
         { "text": "Work complete!" }
       ],
-      "greeting": [
-        { "text": "Ready to work!" }
-      ],
-      "victory": [
-        { "text": "Job's done!" },
-        { "text": "For the Alliance!" }
-      ],
+      "greeting": [{ "text": "Ready to work!" }],
+      "victory": [{ "text": "Job's done!" }, { "text": "For the Alliance!" }],
       "poke": [
         { "text": "Stop poking me!" },
         { "text": "What?!" },
@@ -83,9 +74,15 @@
     "fr": {
       "idle": [
         { "text": "Qu'y a-t-il ?", "sound": "sounds/PeasantWhat1_fr.wav" },
-        { "text": "Encore du travail ?", "sound": "sounds/PeasantWhat2_fr.wav" },
+        {
+          "text": "Encore du travail ?",
+          "sound": "sounds/PeasantWhat2_fr.wav"
+        },
         { "text": "Pardon ?", "sound": "sounds/PeasantWhat3_fr.wav" },
-        { "text": "Vous n'avez personne d'autre ?", "sound": "sounds/PeasantWhat4_fr.wav" }
+        {
+          "text": "Vous n'avez personne d'autre ?",
+          "sound": "sounds/PeasantWhat4_fr.wav"
+        }
       ],
       "working": [
         { "text": "Oui messire.", "sound": "sounds/PeasantYes1_fr.wav" },
@@ -94,24 +91,60 @@
         { "text": "Très bieeeen.", "sound": "sounds/PeasantYes4_fr.wav" },
         { "text": "Je m'en charge.", "sound": "sounds/PeasantYes5_fr.wav" },
         { "text": "Je peux essayer.", "sound": "sounds/PeasantYes6_fr.wav" },
-        { "text": "Si vous l'voulez vraiment.", "sound": "sounds/PeasantYes7_fr.wav" }
+        {
+          "text": "Si vous l'voulez vraiment.",
+          "sound": "sounds/PeasantYes7_fr.wav"
+        }
       ],
       "finished": [
-        { "text": "Travail terminé !", "sound": "sounds/PeasantWorkComplete_fr.wav" },
-        { "text": "Votre prénom c'est François ?", "sound": "sounds/PeasantAngry1_fr.wav" },
-        { "text": "C'est juste, il est beau !", "sound": "sounds/PeasantAngry2_fr.wav" },
-        { "text": "C'est un champion du monde !", "sound": "sounds/PeasantAngry3_fr.wav" },
-        { "text": "Il pourrait refaire l'historique de la louche à travers les âges.", "sound": "sounds/PeasantAngry4_fr.wav" },
-        { "text": "Ne m'invitez jamais à dîner.", "sound": "sounds/PeasantAngry5_fr.wav" },
-        { "text": "J'aurais toujours un doute.", "sound": "sounds/PeasantAngry6_fr.wav" },
-        { "text": "Il essaie de faire de l'humour.", "sound": "sounds/PeasantAngry7_fr.wav" },
-        { "text": "Écoutez ça c'est pathétique.", "sound": "sounds/PeasantAngry8_fr.wav" }
+        {
+          "text": "Travail terminé !",
+          "sound": "sounds/PeasantWorkComplete_fr.wav"
+        },
+        {
+          "text": "Votre prénom c'est François ?",
+          "sound": "sounds/PeasantAngry1_fr.wav"
+        },
+        {
+          "text": "C'est juste, il est beau !",
+          "sound": "sounds/PeasantAngry2_fr.wav"
+        },
+        {
+          "text": "C'est un champion du monde !",
+          "sound": "sounds/PeasantAngry3_fr.wav"
+        },
+        {
+          "text": "Il pourrait refaire l'historique de la louche à travers les âges.",
+          "sound": "sounds/PeasantAngry4_fr.wav"
+        },
+        {
+          "text": "Ne m'invitez jamais à dîner.",
+          "sound": "sounds/PeasantAngry5_fr.wav"
+        },
+        {
+          "text": "J'aurais toujours un doute.",
+          "sound": "sounds/PeasantAngry6_fr.wav"
+        },
+        {
+          "text": "Il essaie de faire de l'humour.",
+          "sound": "sounds/PeasantAngry7_fr.wav"
+        },
+        {
+          "text": "Écoutez ça c'est pathétique.",
+          "sound": "sounds/PeasantAngry8_fr.wav"
+        }
       ],
       "greeting": [
-        { "text": "Prêt à travailler !", "sound": "sounds/PeasantReady1_fr.wav" }
+        {
+          "text": "Prêt à travailler !",
+          "sound": "sounds/PeasantReady1_fr.wav"
+        }
       ],
       "victory": [
-        { "text": "Travail terminé !", "sound": "sounds/PeasantWorkComplete_fr.wav" },
+        {
+          "text": "Travail terminé !",
+          "sound": "sounds/PeasantWorkComplete_fr.wav"
+        },
         { "text": "HaAaAaAa !", "sound": "sounds/PeasantWarcry1_fr.wav" },
         { "text": "GAAAAAARDE !", "sound": "sounds/PeasantWarcry2_fr.wav" }
       ],
@@ -122,7 +155,10 @@
         { "text": "Mais arrête !" }
       ],
       "death": [
-        { "text": "Ça y est, je suis mooooort...", "sound": "sounds/PeasantDeath1_fr.wav" },
+        {
+          "text": "Ça y est, je suis mooooort...",
+          "sound": "sounds/PeasantDeath1_fr.wav"
+        },
         { "text": "AAAARGH !", "sound": "sounds/PeasantWarcry2_fr.wav" },
         { "text": "Tu m'as tué !", "sound": "sounds/PeasantWarcry1_fr.wav" }
       ]
