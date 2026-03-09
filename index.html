@@ -32,7 +32,6 @@
     #drag-handle {
       position: absolute;
       cursor: grab;
-      -webkit-app-region: drag;
       z-index: 5;
     }
 
@@ -158,7 +157,11 @@
     let bubbleTimer = null;
     let poseTimer = null;
     let swapTimer = null;
+    let idleSwapTimer = null;
     let currentAudio = null;
+    let pokeCount = 0;
+    let pokeResetTimer = null;
+    let isDead = false;
 
     // ===== Helpers =====
     function range(start, end) {
@@ -190,10 +193,11 @@
       // Build animations with expanded frame ranges
       anims = {};
       for (const [name, def] of Object.entries(manifest.animations)) {
-        anims[name] = {
-          frameNums: range(def.frames[0], def.frames[1]),
-          speed: def.speed
-        };
+        // 2-element array = [start, end] range; longer = explicit frame list
+        const frameNums = def.frames.length === 2
+          ? range(def.frames[0], def.frames[1])
+          : def.frames;
+        anims[name] = { frameNums, speed: def.speed };
       }
 
       // Normalize lines: detect flat vs i18n format
@@ -233,7 +237,8 @@
       preloadFrames();
 
       // Show first frame immediately so sprite is never blank
-      spriteEl.src = getFramePath(anims[stateConfig.idle?.animation || 'idle']?.frameNums[0] || 0);
+      const firstIdleAnim = stateConfig.idle?.animations?.[0] || stateConfig.idle?.animation || 'idle';
+      spriteEl.src = getFramePath(anims[firstIdleAnim]?.frameNums[0] || 0);
     }
 
     // ===== Animation Playback =====
@@ -328,6 +333,118 @@
       setTimeout(() => particle.remove(), 800);
     }
 
+    // ===== Idle Swap (multi-idle support) =====
+    function startIdleSwap() {
+      if (idleSwapTimer) { clearInterval(idleSwapTimer); idleSwapTimer = null; }
+      const idleCfg = stateConfig.idle || {};
+      const idleAnims = idleCfg.animations;
+      if (!idleAnims || idleAnims.length <= 1) return;
+      const interval = idleCfg.swapInterval || 5000;
+      const baseAnim = idleAnims[0]; // Primary idle animation
+      idleSwapTimer = setInterval(() => {
+        if (currentState !== 'idle' || isDead) return;
+        const next = idleAnims[Math.floor(Math.random() * idleAnims.length)];
+        currentAnim = '';
+        if (next === baseAnim) {
+          playAnim(next, true);
+        } else {
+          // Play variation once (look left/right), then return to base idle
+          playAnim(next, false);
+          const anim = anims[next];
+          if (anim) {
+            const duration = anim.frameNums.length * anim.speed;
+            setTimeout(() => {
+              if (currentState === 'idle' && !isDead) {
+                currentAnim = '';
+                playAnim(baseAnim, true);
+              }
+            }, duration);
+          }
+        }
+      }, interval);
+    }
+
+    function enterIdle() {
+      const idleCfg = stateConfig.idle || {};
+      const idleAnims = idleCfg.animations;
+      if (idleAnims && idleAnims.length > 0) {
+        playAnim(idleAnims[0], true); // Always start with base idle
+        startIdleSwap();
+      } else {
+        playAnim(idleCfg.animation || 'idle', true);
+      }
+    }
+
+    // ===== Poke / Click interaction =====
+    function handlePoke() {
+      if (isDead) return;
+      const pokeCfg = manifest.poke || {};
+      const deathAfter = pokeCfg.deathAfter || 5;
+
+      pokeCount++;
+      if (pokeResetTimer) clearTimeout(pokeResetTimer);
+      pokeResetTimer = setTimeout(() => { pokeCount = 0; }, 3000);
+
+      if (pokeCount >= deathAfter && pokeCfg.deathAnimation && anims[pokeCfg.deathAnimation]) {
+        // Death!
+        isDead = true;
+        pokeCount = 0;
+        if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
+        if (idleSwapTimer) { clearInterval(idleSwapTimer); idleSwapTimer = null; }
+        currentAnim = '';
+        playAnim(pokeCfg.deathAnimation, false);
+        playLine('death');
+
+        // Revive after duration
+        const reviveDelay = pokeCfg.deathDuration || 3000;
+        setTimeout(() => {
+          isDead = false;
+          currentAnim = '';
+          enterIdle();
+          playLine('greeting');
+        }, reviveDelay);
+      } else {
+        playLine('poke');
+      }
+    }
+
+    // ===== Drag + Click detection (JS-based, no -webkit-app-region) =====
+    (function setupDragAndPoke() {
+      const dragHandle = document.getElementById('drag-handle');
+      let dragging = false;
+      let startScreenX = 0, startScreenY = 0;
+      let totalDist = 0;
+
+      dragHandle.addEventListener('mousedown', (e) => {
+        dragging = true;
+        totalDist = 0;
+        startScreenX = e.screenX;
+        startScreenY = e.screenY;
+        e.preventDefault();
+      });
+
+      window.addEventListener('mousemove', (e) => {
+        if (!dragging) return;
+        const dx = e.screenX - startScreenX;
+        const dy = e.screenY - startScreenY;
+        totalDist += Math.abs(dx) + Math.abs(dy);
+        if (totalDist > 5) {
+          ipcRenderer.send('drag-move', dx, dy);
+        }
+        startScreenX = e.screenX;
+        startScreenY = e.screenY;
+      });
+
+      window.addEventListener('mouseup', () => {
+        if (!dragging) return;
+        dragging = false;
+        // Click = mouse didn't move much
+        if (totalDist <= 5) {
+          handlePoke();
+        }
+      });
+    })();
+
     // ===== State Machine =====
     window.updateState = function(newState) {
       if (newState === currentState) return;
@@ -335,6 +452,7 @@
       currentState = newState;
 
       if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
+      if (idleSwapTimer) { clearInterval(idleSwapTimer); idleSwapTimer = null; }
 
       // Always clear poseTimer when entering any new state — prevents
       // a lingering finished→idle transition from overriding the new state
@@ -387,20 +505,17 @@
                 const duration = thenAnim ? thenAnim.frameNums.length * thenAnim.speed + 200 : 2000;
                 setTimeout(() => {
                   if (currentState === 'idle') {
-                    const idleCfg = stateConfig.idle || {};
-                    playAnim(idleCfg.animation || 'idle', true);
+                    enterIdle();
                   }
                 }, duration);
               }
             } else {
-              const idleCfg = stateConfig.idle || {};
-              playAnim(idleCfg.animation || 'idle', true);
+              enterIdle();
             }
             playLine('idle');
           }, finishedCfg.duration || 5000);
         } else {
-          const idleCfg = stateConfig.idle || {};
-          playAnim(idleCfg.animation || 'idle', true);
+          enterIdle();
           playLine('idle');
         }
       }
@@ -408,7 +523,6 @@
 
     // Random bubbles
     setInterval(() => {
-      if (currentState === 'idle' && Math.random() < 0.15) playLine('idle');
       if (currentState === 'finished' && Math.random() < 0.3) {
         playLine('finished');
         if (effects.poseParticles) spawnParticle();
@@ -419,16 +533,18 @@
     window.reloadSprite = function(spriteName) {
       if (animTimer) clearInterval(animTimer);
       if (swapTimer) clearInterval(swapTimer);
+      if (idleSwapTimer) clearInterval(idleSwapTimer);
       if (poseTimer) clearTimeout(poseTimer);
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
       currentAnim = '';
       currentState = 'idle';
+      isDead = false;
+      pokeCount = 0;
 
       spriteEl.style.opacity = '0';
       setTimeout(() => {
         loadManifest(spriteName);
-        const idleCfg = stateConfig.idle || {};
-        playAnim(idleCfg.animation || 'idle', true);
+        enterIdle();
         spriteEl.style.opacity = '1';
         playLine('greeting');
       }, 200);
@@ -445,8 +561,7 @@
       currentLang = lang || 'en';
       loadManifest(spriteName);
       spriteEl.style.transition = 'opacity 0.2s ease';
-      const idleCfg = stateConfig.idle || {};
-      playAnim(idleCfg.animation || 'idle', true);
+      enterIdle();
       setTimeout(() => {
         playLine('greeting');
       }, 1000);
