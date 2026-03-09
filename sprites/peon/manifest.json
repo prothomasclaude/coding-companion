@@ -2,7 +2,7 @@
   "name": "Peon",
   "author": "Spriters Resource",
   "framePattern": "peon_{n}.png",
-  "display": { "width": 34, "height": 43 },
+  "display": { "width": 102, "height": 129 },
   "animations": {
     "idle": { "frames": [0, 0], "speed": 180 },
     "waiting": { "frames": [1, 4], "speed": 140 },
@@ -31,51 +31,30 @@
       }
     }
   },
-  "messages": {
-    "idle": ["Ready to work.", "Something need doing?", "Zug zug.", "Dabu."],
-    "working": [
-      "Work work...",
-      "Me busy, leave me alone!",
-      "Zug zug.",
-      "...",
-      "Okie dokie."
-    ],
-    "finished": [
-      "STOP POKING ME!",
-      "Me not that kind of orc!",
-      "Work work work...",
-      "Work complete!"
-    ],
-    "greeting": ["Something need doing?"]
-  },
-  "sounds": {
+  "lines": {
     "idle": [
-      "sounds/PeonWhat1.wav",
-      "sounds/PeonWhat2.wav",
-      "sounds/PeonWhat3.wav",
-      "sounds/PeonWhat4.wav"
+      { "text": "Something need doing?", "sound": "sounds/PeonWhat1.wav" },
+      { "text": "Me busy, leave me alone!", "sound": "sounds/PeonWhat2.wav" },
+      { "text": "Hmmm?", "sound": "sounds/PeonWhat3.wav" },
+      { "text": "What you want?", "sound": "sounds/PeonWhat4.wav" }
     ],
     "working": [
-      "sounds/PeonYes1.wav",
-      "sounds/PeonYes2.wav",
-      "sounds/PeonYes3.wav",
-      "sounds/PeonYes4.wav",
-      "sounds/PeonYesAttack3.wav"
+      { "text": "Okie dokie.", "sound": "sounds/PeonYes1.wav" },
+      { "text": "Zug zug.", "sound": "sounds/PeonYes2.wav" },
+      { "text": "Dabu.", "sound": "sounds/PeonYes3.wav" },
+      { "text": "Work work...", "sound": "sounds/PeonYes4.wav" }
     ],
     "finished": [
-      "sounds/PeonWorkComplete.wav",
-      "sounds/PeonAngry1.wav",
-      "sounds/PeonAngry2.wav",
-      "sounds/PeonAngry3.wav",
-      "sounds/PeonAngry4.wav"
+      { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
+      { "text": "STOP POKING ME!", "sound": "sounds/PeonAngry1.wav" },
+      { "text": "Me not that kind of orc!", "sound": "sounds/PeonAngry2.wav" }
     ],
     "greeting": [
-      "sounds/PeonReady1.wav",
-      "sounds/PeonWhat4.wav"
+      { "text": "Ready to work!", "sound": "sounds/PeonReady1.wav" }
     ],
     "victory": [
-      "sounds/PeonWorkComplete.wav",
-      "sounds/PeonWarcry1.wav"
+      { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
+      { "text": "WAAAGH!", "sound": "sounds/PeonWarcry1.wav" }
     ]
   },
   "effects": {
@@ -83,6 +62,6 @@
     "poseParticles": true,
     "particleColor": "#8B4513"
   },
-  "hitArea": { "x": 16, "y": 15, "width": 90, "height": 105 },
+  "hitArea": { "x": 6, "y": 6, "width": 90, "height": 117 },
   "preview": "peon_0.png"
 }

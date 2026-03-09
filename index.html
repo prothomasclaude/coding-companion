@@ -143,6 +143,7 @@
     let manifest = null;
     let spritesDir = '';
     let anims = {};
+    let lines = {};
     let messages = {};
     let sounds = {};
     let effects = {};
@@ -193,6 +194,7 @@
         };
       }
 
+      lines = manifest.lines || {};
       messages = manifest.messages || {};
       sounds = manifest.sounds || {};
       effects = manifest.effects || {};
@@ -250,27 +252,45 @@
     }
 
     // ===== Speech Bubbles =====
-    function showBubble(pool) {
-      if (!pool || pool.length === 0) return;
-      const msg = pool[Math.floor(Math.random() * pool.length)];
-      bubble.textContent = msg;
+    function showBubble(text) {
+      if (!text) return;
+      bubble.textContent = text;
       bubble.classList.add('visible');
       if (bubbleTimer) clearTimeout(bubbleTimer);
       bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), 2500);
     }
 
     // ===== Audio =====
-    function playSound(pool) {
-      if (!pool || pool.length === 0) return;
+    function playSoundFile(file) {
+      if (!file) return;
       if (currentAudio) {
         currentAudio.pause();
         currentAudio = null;
       }
-      const file = pool[Math.floor(Math.random() * pool.length)];
       const src = 'file://' + path.join(spritesDir, file);
       currentAudio = new Audio(src);
       currentAudio.volume = 0.5;
       currentAudio.play().catch(() => {});
+    }
+
+    // ===== Paired line (text + sound together) =====
+    function playLine(pool) {
+      // New format: lines[state] = [{ text, sound }, ...]
+      if (lines[pool] && lines[pool].length > 0) {
+        const line = lines[pool][Math.floor(Math.random() * lines[pool].length)];
+        showBubble(line.text);
+        playSoundFile(line.sound);
+        return;
+      }
+      // Fallback: old separate messages/sounds format
+      const msgs = messages[pool];
+      if (msgs && msgs.length > 0) {
+        showBubble(msgs[Math.floor(Math.random() * msgs.length)]);
+      }
+      const snds = sounds[pool];
+      if (snds && snds.length > 0) {
+        playSoundFile(snds[Math.floor(Math.random() * snds.length)]);
+      }
     }
 
     // ===== Particles =====
@@ -303,15 +323,14 @@
         const workAnims = cfg.animations || ['idle'];
         const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
         playAnim(pick, cfg.loop !== false);
-        showBubble(messages.working);
-        playSound(sounds.working);
+        playLine('working');
 
         if (cfg.swapInterval && workAnims.length > 1) {
           swapTimer = setInterval(() => {
             const next = workAnims[Math.floor(Math.random() * workAnims.length)];
             currentAnim = '';
             playAnim(next, true);
-            if (Math.random() < 0.3) showBubble(messages.working);
+            if (Math.random() < 0.3) playLine('working');
           }, cfg.swapInterval);
         }
       } else if (newState === 'idle') {
@@ -322,8 +341,7 @@
           currentState = 'finished';
           if (effects.thinkingAura) aura.style.display = 'block';
           playAnim(finishedCfg.animation || 'idle', finishedCfg.loop !== false);
-          showBubble(messages.finished);
-          playSound(sounds.finished);
+          playLine('finished');
 
           if (effects.poseParticles) {
             for (let i = 0; i < 8; i++) {
@@ -339,7 +357,7 @@
             const then = finishedCfg.then;
             if (then) {
               playAnim(then.animation, then.loop !== undefined ? then.loop : false);
-              playSound(sounds.victory);
+              playLine('victory');
               if (then.thenIdle) {
                 const thenAnim = anims[then.animation];
                 const duration = thenAnim ? thenAnim.frameNums.length * thenAnim.speed + 200 : 2000;
@@ -354,21 +372,21 @@
               const idleCfg = stateConfig.idle || {};
               playAnim(idleCfg.animation || 'idle', true);
             }
-            showBubble(messages.idle);
+            playLine('idle');
           }, finishedCfg.duration || 5000);
         } else {
           const idleCfg = stateConfig.idle || {};
           playAnim(idleCfg.animation || 'idle', true);
-          showBubble(messages.idle);
+          playLine('idle');
         }
       }
     };
 
     // Random bubbles
     setInterval(() => {
-      if (currentState === 'idle' && Math.random() < 0.15) showBubble(messages.idle);
+      if (currentState === 'idle' && Math.random() < 0.15) playLine('idle');
       if (currentState === 'finished' && Math.random() < 0.3) {
-        showBubble(messages.finished);
+        playLine('finished');
         if (effects.poseParticles) spawnParticle();
       }
     }, 3000);
@@ -388,8 +406,7 @@
         const idleCfg = stateConfig.idle || {};
         playAnim(idleCfg.animation || 'idle', true);
         spriteEl.style.opacity = '1';
-        showBubble(messages.greeting || messages.idle);
-        playSound(sounds.greeting);
+        playLine('greeting');
       }, 200);
     };
 
@@ -400,8 +417,7 @@
       const idleCfg = stateConfig.idle || {};
       playAnim(idleCfg.animation || 'idle', true);
       setTimeout(() => {
-        showBubble(messages.greeting || messages.idle);
-        playSound(sounds.greeting);
+        playLine('greeting');
       }, 1000);
     };
   </script>

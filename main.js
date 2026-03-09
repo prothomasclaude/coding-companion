@@ -128,8 +128,8 @@ function createConfigWindow() {
   }
 
   configWindow = new BrowserWindow({
-    width: 480,
-    height: 400,
+    width: 520,
+    height: 440,
     frame: true,
     resizable: false,
     transparent: false,
@@ -161,13 +161,51 @@ function createTrayIcon() {
     buf[i] = r; buf[i+1] = g; buf[i+2] = b; buf[i+3] = a;
   };
 
-  for (let x = 7; x <= 14; x++) for (let y = 3; y <= 5; y++) px(x, y, 123, 104, 238);
-  for (let x = 6; x <= 15; x++) for (let y = 6; y <= 10; y++) px(x, y, 123, 104, 238);
-  for (let x = 7; x <= 14; x++) px(x, 11, 123, 104, 238);
-  px(9, 8, 255, 255, 255); px(12, 8, 255, 255, 255);
-  for (let x = 8; x <= 13; x++) for (let y = 12; y <= 17; y++) px(x, y, 90, 75, 200);
-  for (let y = 13; y <= 15; y++) { px(7, y, 90, 75, 200); px(14, y, 90, 75, 200); }
-  for (let y = 18; y <= 20; y++) { px(9, y, 70, 55, 180); px(12, y, 70, 55, 180); }
+  const rect = (x1, y1, x2, y2, r, g, b, a) => {
+    for (let x = x1; x <= x2; x++) for (let y = y1; y <= y2; y++) px(x, y, r, g, b, a);
+  };
+
+  // Outer glow ring
+  const glowPx = [
+    [7,0],[8,0],[9,0],[10,0],[11,0],[12,0],[13,0],[14,0],
+    [5,1],[6,1],[15,1],[16,1],
+    [4,2],[17,2],
+    [3,3],[18,3],
+    [3,4],[18,4],
+  ];
+  for (const [x, y] of glowPx) { px(x, y, 123, 104, 238, 100); px(x, 21-y, 123, 104, 238, 100); }
+
+  // Head — bright purple, filled round shape
+  rect(7, 1, 14, 2, 157, 130, 255);  // top of head
+  rect(6, 3, 15, 8, 140, 115, 245);  // main head
+  rect(5, 4, 16, 7, 140, 115, 245);  // wider middle
+
+  // Eyes — bright white with pupils
+  px(8, 6, 255, 255, 255); px(9, 6, 255, 255, 255);
+  px(12, 6, 255, 255, 255); px(13, 6, 255, 255, 255);
+  px(9, 6, 30, 20, 60); px(13, 6, 30, 20, 60); // pupils
+
+  // Mouth — small smile
+  px(9, 8, 180, 100, 220); px(10, 8, 180, 100, 220); px(11, 8, 180, 100, 220); px(12, 8, 180, 100, 220);
+
+  // Body
+  rect(7, 9, 14, 10, 100, 80, 210); // neck/shoulders
+  rect(6, 11, 15, 15, 90, 70, 200);  // torso
+  rect(5, 12, 6, 14, 90, 70, 200);   // left arm
+  rect(15, 12, 16, 14, 90, 70, 200); // right arm
+
+  // Legs
+  rect(7, 16, 9, 19, 75, 55, 180);   // left leg
+  rect(12, 16, 14, 19, 75, 55, 180); // right leg
+
+  // Feet
+  rect(6, 20, 10, 20, 60, 45, 160);  // left foot
+  rect(11, 20, 15, 20, 60, 45, 160); // right foot
+
+  // Code brackets on torso — bright accent
+  px(8, 12, 255, 220, 100); px(8, 13, 255, 220, 100); px(8, 14, 255, 220, 100); // <
+  px(13, 12, 255, 220, 100); px(13, 13, 255, 220, 100); px(13, 14, 255, 220, 100); // >
+  px(10, 12, 255, 220, 100); px(11, 13, 255, 220, 100); // /
 
   const img = nativeImage.createFromBuffer(buf, { width: size, height: size });
   if (IS_MAC) img.setTemplateImage(true);
