@@ -4,6 +4,19 @@ status.json
 debug.log
 config.json
 
+# Claude Code local config
+.claude/
+skills/
+
+# Python
+.venv/
+
+# Temp workspace
+sprite-extractor-workspace/
+
+# WIP sprite packs (not yet processed)
+sprites/jotaro/
+
 # Sprite frame PNGs (copyrighted assets, users add their own)
 
 !sprites/*/manifest.json
