@@ -56,6 +56,11 @@
       "victory": [
         { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
         { "text": "WAAAGH!", "sound": "sounds/PeonWarcry1.wav" }
+      ],
+      "poke": [
+        { "text": "STOP POKING ME!", "sound": "sounds/PeonAngry1.wav" },
+        { "text": "Me not that kind of orc!", "sound": "sounds/PeonAngry2.wav" },
+        { "text": "What you want?", "sound": "sounds/PeonWhat4.wav" }
       ]
     },
     "fr": {
@@ -88,6 +93,12 @@
       ],
       "victory": [
         { "text": "Travail terminé !", "sound": "sounds/PeonWorkComplete_fr.wav" },
+        { "text": "QUOIIIII ?!", "sound": "sounds/PeonAngry5_fr.wav" }
+      ],
+      "poke": [
+        { "text": "Je n'suis pas un gentil orc !", "sound": "sounds/PeonAngry1_fr.wav" },
+        { "text": "Je n'ai pas le temps de jouer !", "sound": "sounds/PeonAngry2_fr.wav" },
+        { "text": "Occupé !", "sound": "sounds/PeonAngry3_fr.wav" },
         { "text": "QUOIIIII ?!", "sound": "sounds/PeonAngry5_fr.wav" }
       ]
     }
