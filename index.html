@@ -462,7 +462,7 @@
         const cfg = stateConfig.working || {};
         if (effects.thinkingAura) aura.style.display = 'block';
 
-        const workAnims = cfg.animations || ['idle'];
+        const workAnims = cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']);
         const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
         playAnim(pick, cfg.loop !== false);
         playLine('working');
