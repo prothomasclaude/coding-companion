@@ -23,13 +23,15 @@ Cliquer sur le sprite déclenche une réplique et une animation aléatoire (styl
 - Manifest : nouveau pool de lignes `poke` (texte + son)
 - Animation : jouer une anim courte (sursaut, salut) puis retour à l'état courant
 
-### 1.3 `[ ]` Animations de transition
+### 1.3 `[x]` Animations de transition
 Au lieu de couper net entre états, jouer une animation de passage (ex: le peon se lève, attrape son outil, puis commence à travailler).
 
 **Changements :**
 - Manifest : champ optionnel `transitions` : `{ "idle→working": "get_up", "working→idle": "put_down" }`
 - `index.html` : dans `updateState()`, jouer la transition avant de lancer l'état cible
 - Sprites : créer les frames de transition
+
+**Statut :** Moteur de transitions implémenté. Peasant configuré avec `idle→working: walk`.
 
 ### 1.4 `[ ]` Réactions contextuelles aux hooks
 Étendre le status.json pour transporter un `context` en plus de `state`, permettant au sprite de réagir différemment selon l'action (erreur, commit, test fail, écriture de fichier).
