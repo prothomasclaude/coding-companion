@@ -170,6 +170,33 @@
       color: #7b68ee;
       font-weight: 600;
     }
+
+    .lang-selector {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .lang-selector label {
+      font-size: 11px;
+      color: #555;
+    }
+
+    .lang-selector select {
+      background: #1a1a30;
+      color: #ccc;
+      border: 1px solid #2a2a4a;
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      font-family: inherit;
+      cursor: pointer;
+      outline: none;
+    }
+
+    .lang-selector select:hover {
+      border-color: #7b68ee;
+    }
   </style>
 </head>
 <body>
@@ -180,12 +207,20 @@
   <div class="grid" id="grid"></div>
   <div class="footer">
     <span class="status">Active: <span class="active-name" id="active-name">—</span></span>
+    <div class="lang-selector">
+      <label for="lang-select">Lang:</label>
+      <select id="lang-select">
+        <option value="en">EN</option>
+        <option value="fr">FR</option>
+      </select>
+    </div>
   </div>
 
   <script>
     const { ipcRenderer } = require('electron');
     const grid = document.getElementById('grid');
     const activeName = document.getElementById('active-name');
+    const langSelect = document.getElementById('lang-select');
 
     let selectedId = null;
     let packsData = [];
@@ -198,6 +233,7 @@
 
       packsData = packs;
       selectedId = config.selectedSprite;
+      langSelect.value = config.lang || 'en';
 
       if (packs.length === 0) {
         grid.innerHTML = `
@@ -247,6 +283,14 @@
 
       await ipcRenderer.invoke('select-sprite', id);
     }
+
+    langSelect.addEventListener('change', async () => {
+      await ipcRenderer.invoke('set-lang', langSelect.value);
+    });
+
+    window.onLangChanged = function(lang) {
+      langSelect.value = lang;
+    };
 
     loadPacks();
   </script>

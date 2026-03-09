@@ -17,7 +17,7 @@ function loadConfig() {
   try {
     return JSON.parse(fs.readFileSync(CONFIG_FILE, "utf8"));
   } catch {
-    return { selectedSprite: "jotaro" };
+    return { selectedSprite: "peon", lang: "en" };
   }
 }
 
@@ -99,7 +99,7 @@ function createWindow() {
   // Init sprite after page loads
   mainWindow.webContents.on("did-finish-load", () => {
     mainWindow.webContents.executeJavaScript(
-      `window.initCompanion && window.initCompanion("${config.selectedSprite}")`,
+      `window.initCompanion && window.initCompanion("${config.selectedSprite}", "${config.lang || 'en'}")`,
     );
   });
 
@@ -212,15 +212,54 @@ function createTrayIcon() {
   return img;
 }
 
-function createTray() {
-  const trayIcon = createTrayIcon();
-  tray = new Tray(trayIcon);
-  tray.setToolTip("Coding Companion");
+function buildContextMenu() {
+  const config = loadConfig();
+  const lang = config.lang || "en";
 
-  const contextMenu = Menu.buildFromTemplate([
+  return Menu.buildFromTemplate([
     {
       label: "Select Character...",
       click: () => createConfigWindow(),
+    },
+    { type: "separator" },
+    {
+      label: "Language",
+      submenu: [
+        {
+          label: "English",
+          type: "radio",
+          checked: lang === "en",
+          click: () => {
+            const c = loadConfig();
+            c.lang = "en";
+            saveConfig(c);
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.executeJavaScript(`window.setLang && window.setLang("en")`);
+            }
+            if (configWindow && !configWindow.isDestroyed()) {
+              configWindow.webContents.executeJavaScript(`window.onLangChanged && window.onLangChanged("en")`);
+            }
+            tray.setContextMenu(buildContextMenu());
+          },
+        },
+        {
+          label: "Français",
+          type: "radio",
+          checked: lang === "fr",
+          click: () => {
+            const c = loadConfig();
+            c.lang = "fr";
+            saveConfig(c);
+            if (mainWindow && !mainWindow.isDestroyed()) {
+              mainWindow.webContents.executeJavaScript(`window.setLang && window.setLang("fr")`);
+            }
+            if (configWindow && !configWindow.isDestroyed()) {
+              configWindow.webContents.executeJavaScript(`window.onLangChanged && window.onLangChanged("fr")`);
+            }
+            tray.setContextMenu(buildContextMenu());
+          },
+        },
+      ],
     },
     { type: "separator" },
     {
@@ -228,8 +267,13 @@ function createTray() {
       click: () => app.quit(),
     },
   ]);
+}
 
-  tray.setContextMenu(contextMenu);
+function createTray() {
+  const trayIcon = createTrayIcon();
+  tray = new Tray(trayIcon);
+  tray.setToolTip("Coding Companion");
+  tray.setContextMenu(buildContextMenu());
 }
 
 // ===== IPC Handlers =====
@@ -257,6 +301,26 @@ ipcMain.handle("select-sprite", (_event, spriteId) => {
 
     mainWindow.webContents.executeJavaScript(
       `window.reloadSprite && window.reloadSprite("${spriteId}")`,
+    );
+  }
+  return { success: true };
+});
+
+ipcMain.handle("set-lang", (_event, lang) => {
+  const config = loadConfig();
+  config.lang = lang;
+  saveConfig(config);
+  if (mainWindow && !mainWindow.isDestroyed()) {
+    mainWindow.webContents.executeJavaScript(
+      `window.setLang && window.setLang("${lang}")`,
+    );
+  }
+  // Rebuild tray to update radio state
+  if (tray) tray.setContextMenu(buildContextMenu());
+  // Notify config window
+  if (configWindow && !configWindow.isDestroyed()) {
+    configWindow.webContents.executeJavaScript(
+      `window.onLangChanged && window.onLangChanged("${lang}")`,
     );
   }
   return { success: true };

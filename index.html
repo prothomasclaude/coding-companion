@@ -143,10 +143,12 @@
     let manifest = null;
     let spritesDir = '';
     let anims = {};
+    let linesI18n = {};
     let lines = {};
     let messages = {};
     let sounds = {};
     let effects = {};
+    let currentLang = 'en';
     let stateConfig = {};
 
     let currentState = 'idle';
@@ -194,7 +196,16 @@
         };
       }
 
-      lines = manifest.lines || {};
+      // Normalize lines: detect flat vs i18n format
+      const rawLines = manifest.lines || {};
+      const firstVal = Object.values(rawLines)[0];
+      if (Array.isArray(firstVal)) {
+        // Flat format (no i18n): wrap under "en"
+        linesI18n = { en: rawLines };
+      } else {
+        linesI18n = rawLines;
+      }
+      lines = linesI18n[currentLang] || linesI18n['en'] || {};
       messages = manifest.messages || {};
       sounds = manifest.sounds || {};
       effects = manifest.effects || {};
@@ -279,7 +290,13 @@
       if (lines[pool] && lines[pool].length > 0) {
         const line = lines[pool][Math.floor(Math.random() * lines[pool].length)];
         showBubble(line.text);
-        playSoundFile(line.sound);
+        // Sound fallback: use line's sound, or pick from EN
+        let sound = line.sound;
+        if (!sound && linesI18n['en'] && linesI18n['en'][pool]) {
+          const enLines = linesI18n['en'][pool];
+          sound = enLines[Math.floor(Math.random() * enLines.length)].sound;
+        }
+        playSoundFile(sound);
         return;
       }
       // Fallback: old separate messages/sounds format
@@ -410,8 +427,15 @@
       }, 200);
     };
 
+    // ===== Language switch (called by main process) =====
+    window.setLang = function(lang) {
+      currentLang = lang;
+      lines = linesI18n[lang] || linesI18n['en'] || {};
+    };
+
     // ===== Init (called by main process with selected sprite name) =====
-    window.initCompanion = function(spriteName) {
+    window.initCompanion = function(spriteName, lang) {
+      currentLang = lang || 'en';
       loadManifest(spriteName);
       spriteEl.style.transition = 'opacity 0.2s ease';
       const idleCfg = stateConfig.idle || {};

@@ -32,30 +32,65 @@
     }
   },
   "lines": {
-    "idle": [
-      { "text": "Something need doing?", "sound": "sounds/PeonWhat1.wav" },
-      { "text": "Me busy, leave me alone!", "sound": "sounds/PeonWhat2.wav" },
-      { "text": "Hmmm?", "sound": "sounds/PeonWhat3.wav" },
-      { "text": "What you want?", "sound": "sounds/PeonWhat4.wav" }
-    ],
-    "working": [
-      { "text": "Okie dokie.", "sound": "sounds/PeonYes1.wav" },
-      { "text": "Zug zug.", "sound": "sounds/PeonYes2.wav" },
-      { "text": "Dabu.", "sound": "sounds/PeonYes3.wav" },
-      { "text": "Work work...", "sound": "sounds/PeonYes4.wav" }
-    ],
-    "finished": [
-      { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
-      { "text": "STOP POKING ME!", "sound": "sounds/PeonAngry1.wav" },
-      { "text": "Me not that kind of orc!", "sound": "sounds/PeonAngry2.wav" }
-    ],
-    "greeting": [
-      { "text": "Ready to work!", "sound": "sounds/PeonReady1.wav" }
-    ],
-    "victory": [
-      { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
-      { "text": "WAAAGH!", "sound": "sounds/PeonWarcry1.wav" }
-    ]
+    "en": {
+      "idle": [
+        { "text": "Something need doing?", "sound": "sounds/PeonWhat1.wav" },
+        { "text": "Me busy, leave me alone!", "sound": "sounds/PeonWhat2.wav" },
+        { "text": "Hmmm?", "sound": "sounds/PeonWhat3.wav" },
+        { "text": "What you want?", "sound": "sounds/PeonWhat4.wav" }
+      ],
+      "working": [
+        { "text": "Okie dokie.", "sound": "sounds/PeonYes1.wav" },
+        { "text": "Zug zug.", "sound": "sounds/PeonYes2.wav" },
+        { "text": "Dabu.", "sound": "sounds/PeonYes3.wav" },
+        { "text": "Work work...", "sound": "sounds/PeonYes4.wav" }
+      ],
+      "finished": [
+        { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
+        { "text": "STOP POKING ME!", "sound": "sounds/PeonAngry1.wav" },
+        { "text": "Me not that kind of orc!", "sound": "sounds/PeonAngry2.wav" }
+      ],
+      "greeting": [
+        { "text": "Ready to work!", "sound": "sounds/PeonReady1.wav" }
+      ],
+      "victory": [
+        { "text": "Work complete!", "sound": "sounds/PeonWorkComplete.wav" },
+        { "text": "WAAAGH!", "sound": "sounds/PeonWarcry1.wav" }
+      ]
+    },
+    "fr": {
+      "idle": [
+        { "text": "Que dois-je faire ?", "sound": "sounds/PeonWhat1_fr.wav" },
+        { "text": "Quoi ?", "sound": "sounds/PeonWhat2_fr.wav" },
+        { "text": "Huh ?", "sound": "sounds/PeonWhat3_fr.wav" },
+        { "text": "Ouai ?", "sound": "sounds/PeonWhat4_fr.wav" },
+        { "text": "Pourquoi pas.", "sound": "sounds/PeonWhat5_fr.wav" }
+      ],
+      "working": [
+        { "text": "J'vais essayer.", "sound": "sounds/PeonYes1_fr.wav" },
+        { "text": "OK !", "sound": "sounds/PeonYes2_fr.wav" },
+        { "text": "Oki doki.", "sound": "sounds/PeonYes3_fr.wav" },
+        { "text": "Du travail, encore du travail...", "sound": "sounds/PeonYes4_fr.wav" },
+        { "text": "Avec plaisir.", "sound": "sounds/PeonYes5_fr.wav" },
+        { "text": "Je peux le faire !", "sound": "sounds/PeonYes6_fr.wav" },
+        { "text": "Oui chef.", "sound": "sounds/PeonYes7_fr.wav" }
+      ],
+      "finished": [
+        { "text": "Travail terminé !", "sound": "sounds/PeonWorkComplete_fr.wav" },
+        { "text": "Je n'suis pas un gentil orc !", "sound": "sounds/PeonAngry1_fr.wav" },
+        { "text": "Je n'ai pas le temps de jouer !", "sound": "sounds/PeonAngry2_fr.wav" },
+        { "text": "Occupé !", "sound": "sounds/PeonAngry3_fr.wav" },
+        { "text": "Oubliez-moi !", "sound": "sounds/PeonAngry4_fr.wav" },
+        { "text": "QUOIIIII ?!", "sound": "sounds/PeonAngry5_fr.wav" }
+      ],
+      "greeting": [
+        { "text": "Prêt à travailler !", "sound": "sounds/PeonReady1_fr.wav" }
+      ],
+      "victory": [
+        { "text": "Travail terminé !", "sound": "sounds/PeonWorkComplete_fr.wav" },
+        { "text": "QUOIIIII ?!", "sound": "sounds/PeonAngry5_fr.wav" }
+      ]
+    }
   },
   "effects": {
     "thinkingAura": true,
