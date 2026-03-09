@@ -7,7 +7,7 @@ Chaque feature est marquée d'un statut : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## Phase 1 — Donner vie au sprite (impact max, effort modéré)
 
-### 1.1 `[ ]` Idle aléatoire & micro-animations
+### 1.1 `[x]` Idle aléatoire & micro-animations
 Le sprite ne fait actuellement qu'une seule frame en idle. Ajouter plusieurs variantes d'idle qui se déclenchent aléatoirement : bâillement, regard autour de soi, se gratter la tête, s'asseoir.
 
 **Changements :**
@@ -15,13 +15,17 @@ Le sprite ne fait actuellement qu'une seule frame en idle. Ajouter plusieurs var
 - `index.html` : réutiliser la logique de swap déjà en place pour `working`
 - Sprites : créer les frames additionnelles pour le peon
 
-### 1.2 `[ ]` Clic interactif sur le sprite
+**Statut :** Moteur idle swap implémenté dans `index.html`. Reste à wirer les idle anims dans les manifests (peasant, peon).
+
+### 1.2 `[x]` Clic interactif sur le sprite
 Cliquer sur le sprite déclenche une réplique et une animation aléatoire (style pet/tamagotchi).
 
 **Changements :**
 - `index.html` : event listener `click` sur `#drag-handle`, distinguer clic vs drag
 - Manifest : nouveau pool de lignes `poke` (texte + son)
 - Animation : jouer une anim courte (sursaut, salut) puis retour à l'état courant
+
+**Statut :** Fait. Système de poke + death inclus (clic → réplique, N pokes → mort + revive).
 
 ### 1.3 `[ ]` Animations de transition
 Au lieu de couper net entre états, jouer une animation de passage (ex: le peon se lève, attrape son outil, puis commence à travailler).

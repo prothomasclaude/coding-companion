@@ -12,8 +12,9 @@
   },
   "states": {
     "idle": {
-      "animation": "idle",
-      "loop": true
+      "animations": ["idle", "waiting"],
+      "loop": true,
+      "swapInterval": 5000
     },
     "working": {
       "animations": ["waiting", "working"],

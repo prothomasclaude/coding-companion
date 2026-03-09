@@ -15,8 +15,9 @@
   },
   "states": {
     "idle": {
-      "animation": "idle",
-      "loop": true
+      "animations": ["idle", "idle_look_right", "idle_look_left"],
+      "loop": true,
+      "swapInterval": 4000
     },
     "working": {
       "animation": "chop",
