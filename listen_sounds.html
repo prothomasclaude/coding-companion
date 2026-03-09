@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<title>Peasant Sounds</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: system-ui, sans-serif; background: #1a1a2e; color: #e0e0e0; padding: 2rem; }
+  h1 { margin-bottom: 1.5rem; color: #ffd700; }
+  h2 { margin: 1.5rem 0 0.75rem; color: #87ceeb; font-size: 1.1rem; text-transform: uppercase; letter-spacing: 0.05em; }
+  .sound { display: flex; align-items: center; gap: 0.75rem; padding: 0.5rem 0.75rem; border-radius: 6px; cursor: pointer; transition: background 0.15s; }
+  .sound:hover { background: rgba(255,255,255,0.08); }
+  .sound.playing { background: rgba(255,215,0,0.15); }
+  .sound .file { color: #888; font-size: 0.85rem; min-width: 240px; }
+  .sound .text { color: #ccc; font-style: italic; }
+  .sound .btn { background: #333; border: 1px solid #555; color: #fff; border-radius: 4px; padding: 0.25rem 0.6rem; cursor: pointer; font-size: 0.85rem; }
+  .sound .btn:hover { background: #555; }
+</style>
+</head>
+<body>
+<h1>Peasant - Sons FR</h1>
+<div id="app"></div>
+<script>
+const manifest = {
+  "idle (What)": [
+    { file: "PeasantWhat1_fr.wav", text: "Qu'y a-t-il ?" },
+    { file: "PeasantWhat2_fr.wav", text: "Encore du travail ?" },
+    { file: "PeasantWhat3_fr.wav", text: "Pardon ?" },
+    { file: "PeasantWhat4_fr.wav", text: "Vous n'avez personne d'autre ?" },
+  ],
+  "working (Yes)": [
+    { file: "PeasantYes1_fr.wav", text: "Oui messire." },
+    { file: "PeasantYes2_fr.wav", text: "Bien." },
+    { file: "PeasantYes3_fr.wav", text: "Oui monseigneuuuur." },
+    { file: "PeasantYes4_fr.wav", text: "Très bieeeen." },
+    { file: "PeasantYes5_fr.wav", text: "Je m'en charge." },
+    { file: "PeasantYes6_fr.wav", text: "Je peux essayer." },
+    { file: "PeasantYes7_fr.wav", text: "Si vous l'voulez vraiment." },
+  ],
+  "finished (Angry)": [
+    { file: "PeasantAngry1_fr.wav", text: "Votre prénom c'est François ?" },
+    { file: "PeasantAngry2_fr.wav", text: "C'est juste, il est beau !" },
+    { file: "PeasantAngry3_fr.wav", text: "C'est un champion du monde !" },
+    { file: "PeasantAngry4_fr.wav", text: "Il pourrait refaire l'historique de la louche..." },
+    { file: "PeasantAngry5_fr.wav", text: "Ne m'invitez jamais à dîner." },
+    { file: "PeasantAngry6_fr.wav", text: "J'aurais toujours un doute." },
+    { file: "PeasantAngry7_fr.wav", text: "Il essaie de faire de l'humour." },
+    { file: "PeasantAngry8_fr.wav", text: "Écoutez ça c'est pathétique." },
+  ],
+  "other": [
+    { file: "PeasantReady1_fr.wav", text: "Prêt à travailler !" },
+    { file: "PeasantWorkComplete_fr.wav", text: "Travail terminé !" },
+    { file: "PeasantWarcry1_fr.wav", text: "HaAaAaAa !" },
+    { file: "PeasantWarcry2_fr.wav", text: "GAAAAAARDE !" },
+  ],
+};
+
+let currentAudio = null;
+const app = document.getElementById('app');
+
+for (const [category, sounds] of Object.entries(manifest)) {
+  const h2 = document.createElement('h2');
+  h2.textContent = category;
+  app.appendChild(h2);
+
+  for (const s of sounds) {
+    const div = document.createElement('div');
+    div.className = 'sound';
+    div.innerHTML = `<button class="btn">&#9654;</button><span class="file">${s.file}</span><span class="text">${s.text}</span>`;
+    div.addEventListener('click', () => {
+      if (currentAudio) { currentAudio.pause(); document.querySelectorAll('.playing').forEach(el => el.classList.remove('playing')); }
+      const audio = new Audio('sprites/peasant/sounds/' + s.file);
+      currentAudio = audio;
+      div.classList.add('playing');
+      audio.addEventListener('ended', () => div.classList.remove('playing'));
+      audio.play();
+    });
+    app.appendChild(div);
+  }
+}
+</script>
+</body>
+</html>
