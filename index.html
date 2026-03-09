@@ -231,6 +231,9 @@
       }
 
       preloadFrames();
+
+      // Show first frame immediately so sprite is never blank
+      spriteEl.src = getFramePath(anims[stateConfig.idle?.animation || 'idle']?.frameNums[0] || 0);
     }
 
     // ===== Animation Playback =====

@@ -70,8 +70,19 @@ function createWindow() {
   const winHeight = spriteSize.height + 80;
 
   // Restore saved position or default to bottom-right
-  const startX = config.posX !== undefined ? config.posX : width - winWidth - 40;
-  const startY = config.posY !== undefined ? config.posY : height - winHeight - 20;
+  let startX, startY;
+  if (config.posX !== undefined && config.posY !== undefined) {
+    // Clamp restored position to the nearest display so the sprite isn't split across screens
+    const centerX = config.posX + Math.round(winWidth / 2);
+    const centerY = config.posY + Math.round(winHeight / 2);
+    const nearest = screen.getDisplayNearestPoint({ x: centerX, y: centerY });
+    const { x: dx, y: dy, width: dw, height: dh } = nearest.workArea;
+    startX = Math.max(dx, Math.min(config.posX, dx + dw - winWidth));
+    startY = Math.max(dy, Math.min(config.posY, dy + dh - winHeight));
+  } else {
+    startX = width - winWidth - 40;
+    startY = height - winHeight - 20;
+  }
 
   mainWindow = new BrowserWindow({
     width: winWidth,
@@ -104,16 +115,29 @@ function createWindow() {
   });
 
   // Save position when window moves (debounced)
+  // On Linux/X11, "moved" doesn't fire for -webkit-app-region drag,
+  // so we also poll position periodically as a fallback.
+  const savePosition = () => {
+    if (!mainWindow || mainWindow.isDestroyed()) return;
+    const [x, y] = mainWindow.getPosition();
+    const cfg = loadConfig();
+    if (cfg.posX === x && cfg.posY === y) return;
+    cfg.posX = x;
+    cfg.posY = y;
+    saveConfig(cfg);
+  };
   mainWindow.on("moved", () => {
     if (savePositionTimer) clearTimeout(savePositionTimer);
-    savePositionTimer = setTimeout(() => {
-      const [x, y] = mainWindow.getPosition();
-      const cfg = loadConfig();
-      cfg.posX = x;
-      cfg.posY = y;
-      saveConfig(cfg);
-    }, 500);
+    savePositionTimer = setTimeout(savePosition, 500);
   });
+  // Fallback: poll position every 2s (cheap on resources)
+  const positionPollInterval = setInterval(() => {
+    if (!mainWindow || mainWindow.isDestroyed()) {
+      clearInterval(positionPollInterval);
+      return;
+    }
+    savePosition();
+  }, 2000);
 
   ensureStatusFile();
   watchStatus();
