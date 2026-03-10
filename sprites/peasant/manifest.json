@@ -34,6 +34,9 @@
       }
     }
   },
+  "transitions": {
+    "idle→working": "walk"
+  },
   "poke": {
     "deathAfter": 5,
     "deathAnimation": "death",

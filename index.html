@@ -162,6 +162,8 @@
     let pokeCount = 0;
     let pokeResetTimer = null;
     let isDead = false;
+    let transitions = {};
+    let isTransitioning = false;
 
     // ===== Helpers =====
     function range(start, end) {
@@ -214,6 +216,7 @@
       sounds = manifest.sounds || {};
       effects = manifest.effects || {};
       stateConfig = manifest.states || {};
+      transitions = manifest.transitions || {};
 
       // Apply display size — browser upscales small sprites via image-rendering: pixelated
       spriteEl.style.width = manifest.display.width + 'px';
@@ -446,8 +449,22 @@
     })();
 
     // ===== State Machine =====
+    function playTransition(from, to, callback) {
+      const key = from + '→' + to;
+      const transAnim = transitions[key];
+      if (!transAnim || !anims[transAnim]) { callback(); return; }
+      isTransitioning = true;
+      playAnim(transAnim, false);
+      const anim = anims[transAnim];
+      const duration = anim.frameNums.length * anim.speed;
+      setTimeout(() => {
+        isTransitioning = false;
+        callback();
+      }, duration);
+    }
+
     window.updateState = function(newState) {
-      if (newState === currentState) return;
+      if (newState === currentState && !isTransitioning) return;
       const prevState = currentState;
       currentState = newState;
 
@@ -457,24 +474,28 @@
       // Always clear poseTimer when entering any new state — prevents
       // a lingering finished→idle transition from overriding the new state
       if (poseTimer) { clearTimeout(poseTimer); poseTimer = null; }
+      isTransitioning = false;
 
       if (newState === 'working') {
-        const cfg = stateConfig.working || {};
-        if (effects.thinkingAura) aura.style.display = 'block';
+        playTransition(prevState, 'working', () => {
+          if (currentState !== 'working') return; // state changed during transition
+          const cfg = stateConfig.working || {};
+          if (effects.thinkingAura) aura.style.display = 'block';
 
-        const workAnims = cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']);
-        const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
-        playAnim(pick, cfg.loop !== false);
-        playLine('working');
+          const workAnims = cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']);
+          const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
+          playAnim(pick, cfg.loop !== false);
+          playLine('working');
 
-        if (cfg.swapInterval && workAnims.length > 1) {
-          swapTimer = setInterval(() => {
-            const next = workAnims[Math.floor(Math.random() * workAnims.length)];
-            currentAnim = '';
-            playAnim(next, true);
-            if (Math.random() < 0.3) playLine('working');
-          }, cfg.swapInterval);
-        }
+          if (cfg.swapInterval && workAnims.length > 1) {
+            swapTimer = setInterval(() => {
+              const next = workAnims[Math.floor(Math.random() * workAnims.length)];
+              currentAnim = '';
+              playAnim(next, true);
+              if (Math.random() < 0.3) playLine('working');
+            }, cfg.swapInterval);
+          }
+        });
       } else if (newState === 'idle') {
         aura.style.display = 'none';
 
@@ -515,8 +536,11 @@
             playLine('idle');
           }, finishedCfg.duration || 5000);
         } else {
-          enterIdle();
-          playLine('idle');
+          playTransition(prevState, 'idle', () => {
+            if (currentState !== 'idle') return;
+            enterIdle();
+            playLine('idle');
+          });
         }
       }
     };
