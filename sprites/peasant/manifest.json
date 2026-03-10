@@ -168,6 +168,25 @@
       ]
     }
   },
+  "contexts": {
+    "error": {
+      "animation": "death",
+      "lines": {
+        "working": [
+          { "text": "Something went wrong..." },
+          { "text": "Uh oh, that's not good." }
+        ]
+      }
+    },
+    "commit": {
+      "lines": {
+        "working": [
+          { "text": "Saving progress!" },
+          { "text": "Another one done!" }
+        ]
+      }
+    }
+  },
   "effects": {
     "thinkingAura": true,
     "poseParticles": true,

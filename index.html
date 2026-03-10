@@ -164,6 +164,8 @@
     let isDead = false;
     let transitions = {};
     let isTransitioning = false;
+    let contexts = {};
+    let currentContext = '';
 
     // ===== Helpers =====
     function range(start, end) {
@@ -217,6 +219,7 @@
       effects = manifest.effects || {};
       stateConfig = manifest.states || {};
       transitions = manifest.transitions || {};
+      contexts = manifest.contexts || {};
 
       // Apply display size — browser upscales small sprites via image-rendering: pixelated
       spriteEl.style.width = manifest.display.width + 'px';
@@ -297,6 +300,15 @@
 
     // ===== Paired line (text + sound together) =====
     function playLine(pool) {
+      // Context-specific lines override: check contexts.<context>.lines.<pool> first
+      const ctxCfg = currentContext && contexts[currentContext];
+      if (ctxCfg && ctxCfg.lines && ctxCfg.lines[pool] && ctxCfg.lines[pool].length > 0) {
+        const ctxLines = ctxCfg.lines[pool];
+        const line = ctxLines[Math.floor(Math.random() * ctxLines.length)];
+        showBubble(line.text);
+        playSoundFile(line.sound);
+        return;
+      }
       // New format: lines[state] = [{ text, sound }, ...]
       if (lines[pool] && lines[pool].length > 0) {
         const line = lines[pool][Math.floor(Math.random() * lines[pool].length)];
@@ -463,10 +475,12 @@
       }, duration);
     }
 
-    window.updateState = function(newState) {
-      if (newState === currentState && !isTransitioning) return;
+    window.updateState = function(newState, context) {
+      context = context || '';
+      if (newState === currentState && context === currentContext && !isTransitioning) return;
       const prevState = currentState;
       currentState = newState;
+      currentContext = context;
 
       if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
       if (idleSwapTimer) { clearInterval(idleSwapTimer); idleSwapTimer = null; }
@@ -480,9 +494,12 @@
         playTransition(prevState, 'working', () => {
           if (currentState !== 'working') return; // state changed during transition
           const cfg = stateConfig.working || {};
+          const ctxCfg = context && contexts[context];
           if (effects.thinkingAura) aura.style.display = 'block';
 
-          const workAnims = cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']);
+          // Context can override animation (e.g. error context plays a specific anim)
+          const ctxAnim = ctxCfg && ctxCfg.animation;
+          const workAnims = ctxAnim ? [ctxAnim] : (cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']));
           const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
           playAnim(pick, cfg.loop !== false);
           playLine('working');
