@@ -76,6 +76,10 @@
       ]
     },
     "fr": {
+      "waiting": [
+        { "text": "Qu'y a-t-il ?", "sound": "sounds/PeasantWhat1_fr.wav" },
+        { "text": "Pardon ?", "sound": "sounds/PeasantWhat3_fr.wav" }
+      ],
       "idle": [
         { "text": "Qu'y a-t-il ?", "sound": "sounds/PeasantWhat1_fr.wav" },
         {
