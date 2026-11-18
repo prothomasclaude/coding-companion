@@ -2,9 +2,10 @@
 
 ## Project Overview
 
-**Coding Companion** - Electron desktop overlay that shows an animated sprite reacting to Claude Code activity (idle, thinking, pose).
+**Coding Companion** - Electron desktop overlay that shows an animated sprite reacting to Claude Code activity (idle, working, waiting for you, finished), across every open session.
 
 - **Stack:** Electron 33, vanilla JS, HTML/CSS
+- **Since 2026-11-18 the sprite runs inside Tempo** (`~/code/private/tempo`, widget "Compagnon", `companion.js`), which reads the packs of `sprites/` here. This repo stays the home of the sprite packs and of the standalone app, whose `SessionStart` hook is no longer installed. An engine change must be made in Tempo's `companion.js` too.
 - **Package Manager:** npm
 - **Platform:** Linux (X11), macOS
 
@@ -13,6 +14,7 @@
 ```
 coding-companion/
 ├── main.js          # Electron main process (window, tray, IPC, status watcher)
+├── sessions.js      # Reads Claude Code's session files, decides the state (tested)
 ├── index.html       # Renderer (manifest-driven animation engine)
 ├── config.html      # Character selection UI
 ├── config.json      # Persisted selection + position (gitignored)
@@ -29,8 +31,11 @@ coding-companion/
 ### Key Concepts
 
 - **Sprite Pack Manifest** - Each character is a folder in `sprites/` with a `manifest.json` defining animations, states, messages, and effects
-- **File-based IPC** - Communication via `status.json` polled every 300ms
-- **Claude Code Hooks** - `SessionStart`, `UserPromptSubmit`, `Stop`, `SessionEnd` trigger status changes
+- **State from session files** - `~/.claude/sessions/<pid>.json` holds each running session's `status` (`busy`, `idle`, `waiting`). Polled every 500ms: one waiting session → `waiting` (sticky bubble naming it), else one busy → `working`, else `idle`. This format is undocumented: an unknown status counts as idle.
+- **One hook only** - `SessionStart` (`startup|resume`) starts the sprite. It quits by itself 60s after the last session closes. Never add back `SessionEnd`/`Stop`/`UserPromptSubmit` hooks: with several sessions open they kill or mislead the sprite.
+- **`status.json`** - manual override only (`hooks/set-status.sh`), held 10s.
+- **Tempo** - when `~/.config/tempo/notifications.json` exists, new notifications become bubbles (Tempo's focus and do-not-disturb are respected). Nothing is needed on Tempo's side.
+- **Renderer calls** - always through `call()` in `main.js` (JSON-encoded arguments), never by building a JS string.
 
 ## Commands
 
@@ -42,9 +47,12 @@ npm install
 ./hooks/start-sprite.sh
 ./hooks/stop-sprite.sh
 
-# Force a state
-./hooks/set-status.sh thinking
+# Force a state for 10s (testing a pack)
+./hooks/set-status.sh working
 ./hooks/set-status.sh idle
+
+# Tests
+npm test
 ```
 
 ## Git & Commits
@@ -88,9 +96,10 @@ npm install
 
 | Hook Event | State | Typical Animation |
 |---|---|---|
-| `SessionStart` / `UserPromptSubmit` | `working` | character actively doing something |
-| `Stop` / `SessionEnd` | `finished` | task complete, celebration |
-| Default / timeout | `idle` | standing, breathing, waiting |
+| a session is `busy` | `working` | character actively doing something |
+| a session is `waiting` (permission, question) | `waiting` | optional `states.waiting` + `lines.waiting`, falls back to idle |
+| last busy session goes idle | `finished` | task complete, celebration |
+| nothing running | `idle` | standing, breathing, waiting |
 
 ### Checklist for New Sprite Packs
 

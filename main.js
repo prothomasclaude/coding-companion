@@ -1,6 +1,7 @@
 const { app, BrowserWindow, screen, Tray, Menu, ipcMain, nativeImage } = require("electron");
 const path = require("path");
 const fs = require("fs");
+const { liveSessions, digest } = require("./sessions");
 
 const STATUS_FILE = path.join(__dirname, "status.json");
 const CONFIG_FILE = path.join(__dirname, "config.json");
@@ -11,6 +12,13 @@ let mainWindow;
 let configWindow;
 let tray;
 let savePositionTimer;
+
+// Call a renderer function. Arguments go through JSON: session names and Tempo titles are
+// text written by others, and the renderer has nodeIntegration.
+function call(win, fn, ...args) {
+  if (!win || win.isDestroyed()) return;
+  win.webContents.executeJavaScript(`window.${fn} && window.${fn}(...${JSON.stringify(args)})`).catch(() => {});
+}
 
 // ===== Config =====
 function loadConfig() {
@@ -33,7 +41,9 @@ function scanSpritePacks() {
     for (const dir of dirs) {
       const manifestPath = path.join(SPRITES_DIR, dir, "manifest.json");
       if (fs.existsSync(manifestPath)) {
-        const manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8"));
+        let manifest;
+        // one broken manifest must not hide the packs after it
+        try { manifest = JSON.parse(fs.readFileSync(manifestPath, "utf8")); } catch { continue; }
         packs.push({
           id: dir,
           name: manifest.name,
@@ -109,9 +119,9 @@ function createWindow() {
 
   // Init sprite after page loads
   mainWindow.webContents.on("did-finish-load", () => {
-    mainWindow.webContents.executeJavaScript(
-      `window.initCompanion && window.initCompanion("${config.selectedSprite}", "${config.lang || 'en'}")`,
-    );
+    call(mainWindow, "initCompanion", config.selectedSprite, config.lang || "en");
+    ensureStatusFile();
+    watchStatus();
   });
 
   // Save position when window moves (debounced)
@@ -139,8 +149,6 @@ function createWindow() {
     savePosition();
   }, 2000);
 
-  ensureStatusFile();
-  watchStatus();
 }
 
 // ===== Config Window =====
@@ -257,12 +265,8 @@ function buildContextMenu() {
             const c = loadConfig();
             c.lang = "en";
             saveConfig(c);
-            if (mainWindow && !mainWindow.isDestroyed()) {
-              mainWindow.webContents.executeJavaScript(`window.setLang && window.setLang("en")`);
-            }
-            if (configWindow && !configWindow.isDestroyed()) {
-              configWindow.webContents.executeJavaScript(`window.onLangChanged && window.onLangChanged("en")`);
-            }
+            call(mainWindow, "setLang", "en");
+            call(configWindow, "onLangChanged", "en");
             tray.setContextMenu(buildContextMenu());
           },
         },
@@ -274,12 +278,8 @@ function buildContextMenu() {
             const c = loadConfig();
             c.lang = "fr";
             saveConfig(c);
-            if (mainWindow && !mainWindow.isDestroyed()) {
-              mainWindow.webContents.executeJavaScript(`window.setLang && window.setLang("fr")`);
-            }
-            if (configWindow && !configWindow.isDestroyed()) {
-              configWindow.webContents.executeJavaScript(`window.onLangChanged && window.onLangChanged("fr")`);
-            }
+            call(mainWindow, "setLang", "fr");
+            call(configWindow, "onLangChanged", "fr");
             tray.setContextMenu(buildContextMenu());
           },
         },
@@ -323,9 +323,7 @@ ipcMain.handle("select-sprite", (_event, spriteId) => {
 
     mainWindow.setShape([{ x: 0, y: 0, width: winWidth, height: winHeight }]);
 
-    mainWindow.webContents.executeJavaScript(
-      `window.reloadSprite && window.reloadSprite("${spriteId}")`,
-    );
+    call(mainWindow, "reloadSprite", spriteId);
   }
   return { success: true };
 });
@@ -334,27 +332,32 @@ ipcMain.handle("set-lang", (_event, lang) => {
   const config = loadConfig();
   config.lang = lang;
   saveConfig(config);
-  if (mainWindow && !mainWindow.isDestroyed()) {
-    mainWindow.webContents.executeJavaScript(
-      `window.setLang && window.setLang("${lang}")`,
-    );
-  }
+  call(mainWindow, "setLang", lang);
   // Rebuild tray to update radio state
   if (tray) tray.setContextMenu(buildContextMenu());
   // Notify config window
-  if (configWindow && !configWindow.isDestroyed()) {
-    configWindow.webContents.executeJavaScript(
-      `window.onLangChanged && window.onLangChanged("${lang}")`,
-    );
-  }
+  call(configWindow, "onLangChanged", lang);
   return { success: true };
 });
 
-// Manual window drag via IPC
-ipcMain.on("drag-move", (_event, dx, dy) => {
+// Manual window drag via IPC — absolute coordinates anchored at drag start.
+// Relative deltas drift on X11: setPosition is async, so getPosition returns
+// stale values during fast moves and the window falls behind the cursor.
+let dragOrigin = null;
+ipcMain.on("drag-start", (_event, cursorX, cursorY) => {
   if (!mainWindow || mainWindow.isDestroyed()) return;
-  const [x, y] = mainWindow.getPosition();
-  mainWindow.setPosition(x + dx, y + dy);
+  const [winX, winY] = mainWindow.getPosition();
+  dragOrigin = { winX, winY, cursorX, cursorY };
+});
+ipcMain.on("drag-move", (_event, cursorX, cursorY) => {
+  if (!mainWindow || mainWindow.isDestroyed() || !dragOrigin) return;
+  mainWindow.setPosition(
+    dragOrigin.winX + (cursorX - dragOrigin.cursorX),
+    dragOrigin.winY + (cursorY - dragOrigin.cursorY),
+  );
+});
+ipcMain.on("drag-end", () => {
+  dragOrigin = null;
 });
 
 // ===== Status File =====
@@ -364,36 +367,94 @@ function ensureStatusFile() {
   }
 }
 
+const TEXT = {
+  en: { waiting: n => `${n} needs you`, done: n => `${n} is done` },
+  fr: { waiting: n => `${n} t'attend`, done: n => `${n} a fini` },
+};
+
+// The state comes from Claude Code's own session files, so every open session counts:
+// the sprite works while any of them works and asks for you when one is blocked.
+// status.json stays as a manual override (hooks/set-status.sh), held for a few seconds.
 function watchStatus() {
-  let lastState = "idle";
-  let lastContext = "";
-  let lastTimestamp = 0;
-  const checkStatus = () => {
+  let prev = new Map();
+  let lastState = null;
+  let lastNote = "";
+  let lastForced = fs.statSync(STATUS_FILE).mtimeMs; // what was written before we started is stale
+  let forcedUntil = 0;
+  let emptySince = null;
+  const tempoFile = path.join(app.getPath("appData"), "tempo", "notifications.json");
+  let tempoAt = 0;
+  const tempoSeen = new Set();
+  let tempoPrimed = false;
+
+  const tick = () => {
+    const text = TEXT[loadConfig().lang] || TEXT.en;
+
     try {
-      const data = JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
-      const context = data.context || "";
-      const ts = data.timestamp || 0;
-      if (data.state !== lastState || context !== lastContext || ts !== lastTimestamp) {
-        lastState = data.state;
-        lastContext = context;
-        lastTimestamp = ts;
-        const escaped = context.replace(/[^a-zA-Z0-9_]/g, '');
-        mainWindow?.webContents?.executeJavaScript(
-          `window.updateState && window.updateState("${data.state}", "${escaped}")`,
-        );
+      const at = fs.statSync(STATUS_FILE).mtimeMs;
+      if (at !== lastForced) {
+        lastForced = at;
+        const data = JSON.parse(fs.readFileSync(STATUS_FILE, "utf8"));
+        forcedUntil = Date.now() + 10000;
+        lastState = null;
+        call(mainWindow, "updateState", String(data.state), String(data.context || ""));
+      }
+    } catch {}
+
+    const sessions = liveSessions();
+    if (sessions) {
+      // nobody left: leave, the SessionStart hook brings the sprite back
+      emptySince = sessions.length ? null : emptySince ?? Date.now();
+      if (emptySince && Date.now() - emptySince > 60000) return app.quit();
+
+      const d = digest(sessions, prev);
+      prev = d.next;
+      const note = d.waiting ? text.waiting(d.waiting) : "";
+      if (Date.now() > forcedUntil && (d.state !== lastState || note !== lastNote)) {
+        lastState = d.state;
+        lastNote = note;
+        call(mainWindow, "updateState", d.state, "", note);
+      }
+      for (const e of d.events) {
+        // a waiting session already shows in the sticky bubble of the waiting state
+        if (e.kind === "done" && d.state !== "idle") call(mainWindow, "say", text.done(e.name), "finished");
+      }
+    }
+
+    // Tempo, when it runs: its notifications (review asked, CI red, run finished) become bubbles.
+    // Tempo holds them back during a focus or do-not-disturb, and so does the sprite.
+    try {
+      const at = fs.statSync(tempoFile).mtimeMs;
+      if (at !== tempoAt) {
+        tempoAt = at;
+        for (const n of JSON.parse(fs.readFileSync(tempoFile, "utf8"))) {
+          if (n.held || tempoSeen.has(n.id)) continue;
+          tempoSeen.add(n.id);
+          // shortcut: matched on Tempo's wording, the session files already announce that one
+          if (tempoPrimed && !n.read && !/Claude t'attend/.test(n.title)) call(mainWindow, "say", [n.title, n.body].filter(Boolean).join(" : "), "idle");
+        }
+        tempoPrimed = true;
       }
     } catch {}
   };
-  setInterval(checkStatus, 300);
-  checkStatus();
+  setInterval(tick, 500);
+  tick();
 }
 
 // ===== App Lifecycle =====
+// two sessions starting together must not give two sprites
+if (!app.requestSingleInstanceLock()) app.quit();
+
 app.whenReady().then(() => {
   createWindow();
   createTray();
 });
 
 app.on("window-all-closed", () => app.quit());
+// the sprite now quits by itself: leave no pid behind for start-sprite.sh, unless it is another instance's
+app.on("quit", () => {
+  const pidFile = path.join(__dirname, "sprite.pid");
+  try { if (fs.readFileSync(pidFile, "utf8").trim() === String(process.pid)) fs.unlinkSync(pidFile); } catch {}
+});
 process.on("SIGTERM", () => app.quit());
 process.on("SIGINT", () => app.quit());

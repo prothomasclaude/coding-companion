@@ -12,7 +12,9 @@ Your companion watches Claude Code through shell hooks:
 - **Working** — animated when Claude is processing (with aura glow)
 - **Finished** — victory pose, particles, and celebration when Claude is done
 
-Communication happens via a `status.json` file that Claude Code hooks write to. The Electron overlay polls it every 300ms.
+- **Waiting**: a session is blocked on you (permission, question): the bubble names it and stays up
+
+The state is read from Claude Code's own session files (`~/.claude/sessions`), so every open session counts. The sprite quits by itself once the last session is closed. If Tempo runs on the machine, its notifications show up as bubbles.
 
 ## Installation
 
@@ -44,23 +46,8 @@ Add the following to your `~/.claude/settings.json`:
   "hooks": {
     "SessionStart": [
       {
-        "matcher": "startup",
+        "matcher": "startup|resume",
         "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/start-sprite.sh", "timeout": 5 }]
-      }
-    ],
-    "SessionEnd": [
-      {
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/stop-sprite.sh", "timeout": 5 }]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/set-status.sh working", "timeout": 2 }]
-      }
-    ],
-    "Stop": [
-      {
-        "hooks": [{ "type": "command", "command": "$HOME/.claude/coding-companion/hooks/set-status.sh idle", "timeout": 2 }]
       }
     ]
   }

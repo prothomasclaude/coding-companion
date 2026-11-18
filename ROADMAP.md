@@ -78,12 +78,14 @@ Petit son de clavier pendant working, ding à finished. Option lo-fi en fond.
 - Option musique lo-fi dans le tray menu (toggle on/off)
 - Volume configurable dans `config.json`
 
-### 2.4 `[ ]` Notifications quand inactif
+### 2.4 `[x]` Notifications quand inactif
 Si Claude finit une tâche et que l'utilisateur est sur une autre fenêtre, afficher une notification système.
 
 **Changements :**
 - `main.js` : utiliser `Notification` d'Electron quand `state` passe à `idle` après `working`
 - Optionnel : configurable dans le tray menu
+
+**Statut :** Fait autrement, sans notification système. L'état vient des fichiers de session de Claude Code : le sprite annonce la session qui t'attend (bulle qui reste) et celle qui vient de finir, pour toutes les sessions ouvertes.
 
 ---
 

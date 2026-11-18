@@ -277,13 +277,26 @@
     }
 
     // ===== Speech Bubbles =====
+    // stickyText: who is waiting for the user. It stays up, and comes back after any other line.
+    let stickyText = '';
     function showBubble(text) {
       if (!text) return;
       bubble.textContent = text;
       bubble.classList.add('visible');
       if (bubbleTimer) clearTimeout(bubbleTimer);
-      bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), 2500);
+      bubbleTimer = setTimeout(() => {
+        if (stickyText) bubble.textContent = stickyText;
+        else bubble.classList.remove('visible');
+      }, 2500);
     }
+
+    // A line announced by the main process (a session is done, a Tempo notification):
+    // the pack gives the voice, the text is ours.
+    window.say = function(text, pool) {
+      if (isDead) return;
+      playLine(pool);
+      showBubble(text);
+    };
 
     // ===== Audio =====
     function playSoundFile(file) {
@@ -435,29 +448,31 @@
         totalDist = 0;
         startScreenX = e.screenX;
         startScreenY = e.screenY;
+        ipcRenderer.send('drag-start', e.screenX, e.screenY);
         e.preventDefault();
       });
 
       window.addEventListener('mousemove', (e) => {
         if (!dragging) return;
-        const dx = e.screenX - startScreenX;
-        const dy = e.screenY - startScreenY;
-        totalDist += Math.abs(dx) + Math.abs(dy);
-        if (totalDist > 5) {
-          ipcRenderer.send('drag-move', dx, dy);
-        }
+        totalDist += Math.abs(e.screenX - startScreenX) + Math.abs(e.screenY - startScreenY);
         startScreenX = e.screenX;
         startScreenY = e.screenY;
-      });
-
-      window.addEventListener('mouseup', () => {
-        if (!dragging) return;
-        dragging = false;
-        // Click = mouse didn't move much
-        if (totalDist <= 5) {
-          handlePoke();
+        if (totalDist > 5) {
+          ipcRenderer.send('drag-move', e.screenX, e.screenY);
         }
       });
+
+      const endDrag = (isClick) => {
+        if (!dragging) return;
+        dragging = false;
+        ipcRenderer.send('drag-end');
+        // Click = mouse didn't move much
+        if (isClick && totalDist <= 5) {
+          handlePoke();
+        }
+      };
+      window.addEventListener('mouseup', () => endDrag(true));
+      window.addEventListener('blur', () => endDrag(false));
     })();
 
     // ===== State Machine =====
@@ -475,9 +490,16 @@
       }, duration);
     }
 
-    window.updateState = function(newState, context) {
+    window.updateState = function(newState, context, note) {
       context = context || '';
-      if (newState === currentState && context === currentContext && !isTransitioning) return;
+      note = newState === 'waiting' ? note || '' : '';
+      if (newState === currentState && context === currentContext && !isTransitioning) {
+        // same state, another session waiting
+        if (note !== stickyText) { stickyText = note; showBubble(note); }
+        return;
+      }
+      stickyText = note;
+      if (!note) bubble.classList.remove('visible');
       const prevState = currentState;
       currentState = newState;
       currentContext = context;
@@ -513,6 +535,14 @@
             }, cfg.swapInterval);
           }
         });
+      } else if (newState === 'waiting') {
+        // A session is blocked on the user (permission, question): stop working and call them.
+        aura.style.display = 'none';
+        const cfg = stateConfig.waiting;
+        if (cfg && anims[cfg.animation]) playAnim(cfg.animation, cfg.loop !== false);
+        else enterIdle();
+        playLine(lines.waiting || messages.waiting ? 'waiting' : 'idle');
+        showBubble(note);
       } else if (newState === 'idle') {
         aura.style.display = 'none';
 
@@ -577,6 +607,9 @@
       if (idleSwapTimer) clearInterval(idleSwapTimer);
       if (poseTimer) clearTimeout(poseTimer);
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      // the new character picks up where the old one was (working, waiting), not at idle
+      const state = currentState === 'finished' ? 'idle' : currentState;
+      const note = stickyText;
       currentAnim = '';
       currentState = 'idle';
       isDead = false;
@@ -588,6 +621,7 @@
         enterIdle();
         spriteEl.style.opacity = '1';
         playLine('greeting');
+        if (currentState === 'idle') window.updateState(state, '', note);
       }, 200);
     };
 
