@@ -162,6 +162,10 @@
     let pokeCount = 0;
     let pokeResetTimer = null;
     let isDead = false;
+    let transitions = {};
+    let isTransitioning = false;
+    let contexts = {};
+    let currentContext = '';
 
     // ===== Helpers =====
     function range(start, end) {
@@ -214,6 +218,8 @@
       sounds = manifest.sounds || {};
       effects = manifest.effects || {};
       stateConfig = manifest.states || {};
+      transitions = manifest.transitions || {};
+      contexts = manifest.contexts || {};
 
       // Apply display size — browser upscales small sprites via image-rendering: pixelated
       spriteEl.style.width = manifest.display.width + 'px';
@@ -271,13 +277,26 @@
     }
 
     // ===== Speech Bubbles =====
+    // stickyText: who is waiting for the user. It stays up, and comes back after any other line.
+    let stickyText = '';
     function showBubble(text) {
       if (!text) return;
       bubble.textContent = text;
       bubble.classList.add('visible');
       if (bubbleTimer) clearTimeout(bubbleTimer);
-      bubbleTimer = setTimeout(() => bubble.classList.remove('visible'), 2500);
+      bubbleTimer = setTimeout(() => {
+        if (stickyText) bubble.textContent = stickyText;
+        else bubble.classList.remove('visible');
+      }, 2500);
     }
+
+    // A line announced by the main process (a session is done, a Tempo notification):
+    // the pack gives the voice, the text is ours.
+    window.say = function(text, pool) {
+      if (isDead) return;
+      playLine(pool);
+      showBubble(text);
+    };
 
     // ===== Audio =====
     function playSoundFile(file) {
@@ -294,6 +313,15 @@
 
     // ===== Paired line (text + sound together) =====
     function playLine(pool) {
+      // Context-specific lines override: check contexts.<context>.lines.<pool> first
+      const ctxCfg = currentContext && contexts[currentContext];
+      if (ctxCfg && ctxCfg.lines && ctxCfg.lines[pool] && ctxCfg.lines[pool].length > 0) {
+        const ctxLines = ctxCfg.lines[pool];
+        const line = ctxLines[Math.floor(Math.random() * ctxLines.length)];
+        showBubble(line.text);
+        playSoundFile(line.sound);
+        return;
+      }
       // New format: lines[state] = [{ text, sound }, ...]
       if (lines[pool] && lines[pool].length > 0) {
         const line = lines[pool][Math.floor(Math.random() * lines[pool].length)];
@@ -420,36 +448,61 @@
         totalDist = 0;
         startScreenX = e.screenX;
         startScreenY = e.screenY;
+        ipcRenderer.send('drag-start', e.screenX, e.screenY);
         e.preventDefault();
       });
 
       window.addEventListener('mousemove', (e) => {
         if (!dragging) return;
-        const dx = e.screenX - startScreenX;
-        const dy = e.screenY - startScreenY;
-        totalDist += Math.abs(dx) + Math.abs(dy);
-        if (totalDist > 5) {
-          ipcRenderer.send('drag-move', dx, dy);
-        }
+        totalDist += Math.abs(e.screenX - startScreenX) + Math.abs(e.screenY - startScreenY);
         startScreenX = e.screenX;
         startScreenY = e.screenY;
-      });
-
-      window.addEventListener('mouseup', () => {
-        if (!dragging) return;
-        dragging = false;
-        // Click = mouse didn't move much
-        if (totalDist <= 5) {
-          handlePoke();
+        if (totalDist > 5) {
+          ipcRenderer.send('drag-move', e.screenX, e.screenY);
         }
       });
+
+      const endDrag = (isClick) => {
+        if (!dragging) return;
+        dragging = false;
+        ipcRenderer.send('drag-end');
+        // Click = mouse didn't move much
+        if (isClick && totalDist <= 5) {
+          handlePoke();
+        }
+      };
+      window.addEventListener('mouseup', () => endDrag(true));
+      window.addEventListener('blur', () => endDrag(false));
     })();
 
     // ===== State Machine =====
-    window.updateState = function(newState) {
-      if (newState === currentState) return;
+    function playTransition(from, to, callback) {
+      const key = from + '→' + to;
+      const transAnim = transitions[key];
+      if (!transAnim || !anims[transAnim]) { callback(); return; }
+      isTransitioning = true;
+      playAnim(transAnim, false);
+      const anim = anims[transAnim];
+      const duration = anim.frameNums.length * anim.speed;
+      setTimeout(() => {
+        isTransitioning = false;
+        callback();
+      }, duration);
+    }
+
+    window.updateState = function(newState, context, note) {
+      context = context || '';
+      note = newState === 'waiting' ? note || '' : '';
+      if (newState === currentState && context === currentContext && !isTransitioning) {
+        // same state, another session waiting
+        if (note !== stickyText) { stickyText = note; showBubble(note); }
+        return;
+      }
+      stickyText = note;
+      if (!note) bubble.classList.remove('visible');
       const prevState = currentState;
       currentState = newState;
+      currentContext = context;
 
       if (swapTimer) { clearInterval(swapTimer); swapTimer = null; }
       if (idleSwapTimer) { clearInterval(idleSwapTimer); idleSwapTimer = null; }
@@ -457,24 +510,39 @@
       // Always clear poseTimer when entering any new state — prevents
       // a lingering finished→idle transition from overriding the new state
       if (poseTimer) { clearTimeout(poseTimer); poseTimer = null; }
+      isTransitioning = false;
 
       if (newState === 'working') {
-        const cfg = stateConfig.working || {};
-        if (effects.thinkingAura) aura.style.display = 'block';
+        playTransition(prevState, 'working', () => {
+          if (currentState !== 'working') return; // state changed during transition
+          const cfg = stateConfig.working || {};
+          const ctxCfg = context && contexts[context];
+          if (effects.thinkingAura) aura.style.display = 'block';
 
-        const workAnims = cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']);
-        const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
-        playAnim(pick, cfg.loop !== false);
-        playLine('working');
+          // Context can override animation (e.g. error context plays a specific anim)
+          const ctxAnim = ctxCfg && ctxCfg.animation;
+          const workAnims = ctxAnim ? [ctxAnim] : (cfg.animations || (cfg.animation ? [cfg.animation] : ['idle']));
+          const pick = workAnims[Math.floor(Math.random() * workAnims.length)];
+          playAnim(pick, cfg.loop !== false);
+          playLine('working');
 
-        if (cfg.swapInterval && workAnims.length > 1) {
-          swapTimer = setInterval(() => {
-            const next = workAnims[Math.floor(Math.random() * workAnims.length)];
-            currentAnim = '';
-            playAnim(next, true);
-            if (Math.random() < 0.3) playLine('working');
-          }, cfg.swapInterval);
-        }
+          if (cfg.swapInterval && workAnims.length > 1) {
+            swapTimer = setInterval(() => {
+              const next = workAnims[Math.floor(Math.random() * workAnims.length)];
+              currentAnim = '';
+              playAnim(next, true);
+              if (Math.random() < 0.3) playLine('working');
+            }, cfg.swapInterval);
+          }
+        });
+      } else if (newState === 'waiting') {
+        // A session is blocked on the user (permission, question): stop working and call them.
+        aura.style.display = 'none';
+        const cfg = stateConfig.waiting;
+        if (cfg && anims[cfg.animation]) playAnim(cfg.animation, cfg.loop !== false);
+        else enterIdle();
+        playLine(lines.waiting || messages.waiting ? 'waiting' : 'idle');
+        showBubble(note);
       } else if (newState === 'idle') {
         aura.style.display = 'none';
 
@@ -515,8 +583,11 @@
             playLine('idle');
           }, finishedCfg.duration || 5000);
         } else {
-          enterIdle();
-          playLine('idle');
+          playTransition(prevState, 'idle', () => {
+            if (currentState !== 'idle') return;
+            enterIdle();
+            playLine('idle');
+          });
         }
       }
     };
@@ -536,6 +607,9 @@
       if (idleSwapTimer) clearInterval(idleSwapTimer);
       if (poseTimer) clearTimeout(poseTimer);
       if (currentAudio) { currentAudio.pause(); currentAudio = null; }
+      // the new character picks up where the old one was (working, waiting), not at idle
+      const state = currentState === 'finished' ? 'idle' : currentState;
+      const note = stickyText;
       currentAnim = '';
       currentState = 'idle';
       isDead = false;
@@ -547,6 +621,7 @@
         enterIdle();
         spriteEl.style.opacity = '1';
         playLine('greeting');
+        if (currentState === 'idle') window.updateState(state, '', note);
       }, 200);
     };
 

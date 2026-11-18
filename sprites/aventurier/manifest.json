@@ -1,0 +1,269 @@
+{
+  "name": "Aventurier",
+  "author": "Kenney (kenney.nl), CC0",
+  "framePattern": "aventurier_{n}.png",
+  "display": {
+    "width": 96,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        0
+      ],
+      "speed": 400
+    },
+    "waiting": {
+      "frames": [
+        1,
+        6
+      ],
+      "speed": 420
+    },
+    "look": {
+      "frames": [
+        7,
+        11
+      ],
+      "speed": 450
+    },
+    "working": {
+      "frames": [
+        12,
+        17
+      ],
+      "speed": 220
+    },
+    "running": {
+      "frames": [
+        18,
+        25
+      ],
+      "speed": 110
+    },
+    "finished": {
+      "frames": [
+        26,
+        27
+      ],
+      "speed": 260
+    },
+    "victory": {
+      "frames": [
+        28,
+        32
+      ],
+      "speed": 200
+    },
+    "death": {
+      "frames": [
+        33,
+        37
+      ],
+      "speed": 220
+    }
+  },
+  "states": {
+    "idle": {
+      "animations": [
+        "idle",
+        "look",
+        "waiting"
+      ],
+      "loop": true,
+      "swapInterval": 6000
+    },
+    "working": {
+      "animations": [
+        "working",
+        "running"
+      ],
+      "loop": true,
+      "swapInterval": 5000
+    },
+    "waiting": {
+      "animation": "waiting",
+      "loop": true
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 3500,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "poke": {
+    "deathAfter": 5,
+    "deathAnimation": "death",
+    "deathDuration": 3000
+  },
+  "lines": {
+    "fr": {
+      "greeting": [
+        {
+          "text": "Prêt pour l'aventure."
+        },
+        {
+          "text": "On y va ?"
+        }
+      ],
+      "idle": [
+        {
+          "text": "Rien à l'horizon."
+        },
+        {
+          "text": "J'affûte mes outils."
+        },
+        {
+          "text": "Oui ?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Je creuse."
+        },
+        {
+          "text": "Ça avance."
+        },
+        {
+          "text": "Encore une salle."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Ta décision, chef."
+        },
+        {
+          "text": "Je ne passe pas sans toi."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Mission accomplie."
+        },
+        {
+          "text": "Le butin est là."
+        }
+      ],
+      "victory": [
+        {
+          "text": "Quelle expédition !"
+        },
+        {
+          "text": "Hourra !"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Doucement !"
+        },
+        {
+          "text": "Je suis chatouilleux."
+        },
+        {
+          "text": "Hé !"
+        }
+      ],
+      "death": [
+        {
+          "text": "Je me suis fait avoir..."
+        },
+        {
+          "text": "Ouille."
+        }
+      ]
+    },
+    "en": {
+      "greeting": [
+        {
+          "text": "Ready for adventure."
+        },
+        {
+          "text": "Shall we?"
+        }
+      ],
+      "idle": [
+        {
+          "text": "Nothing on the horizon."
+        },
+        {
+          "text": "Sharpening my tools."
+        },
+        {
+          "text": "Yes?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Digging."
+        },
+        {
+          "text": "Making progress."
+        },
+        {
+          "text": "One more room."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Your call, boss."
+        },
+        {
+          "text": "I won't go on without you."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Mission accomplished."
+        },
+        {
+          "text": "The loot is here."
+        }
+      ],
+      "victory": [
+        {
+          "text": "What an expedition!"
+        },
+        {
+          "text": "Hurray!"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Easy!"
+        },
+        {
+          "text": "I'm ticklish."
+        },
+        {
+          "text": "Hey!"
+        }
+      ],
+      "death": [
+        {
+          "text": "They got me..."
+        },
+        {
+          "text": "Ouch."
+        }
+      ]
+    }
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#FFD54F"
+  },
+  "hitArea": {
+    "x": 12,
+    "y": 20,
+    "width": 72,
+    "height": 108
+  },
+  "preview": "aventurier_0.png"
+}

@@ -7,7 +7,7 @@ Chaque feature est marquée d'un statut : `[ ]` à faire, `[~]` en cours, `[x]` 
 
 ## Phase 1 — Donner vie au sprite (impact max, effort modéré)
 
-### 1.1 `[ ]` Idle aléatoire & micro-animations
+### 1.1 `[x]` Idle aléatoire & micro-animations
 Le sprite ne fait actuellement qu'une seule frame en idle. Ajouter plusieurs variantes d'idle qui se déclenchent aléatoirement : bâillement, regard autour de soi, se gratter la tête, s'asseoir.
 
 **Changements :**
@@ -15,7 +15,9 @@ Le sprite ne fait actuellement qu'une seule frame en idle. Ajouter plusieurs var
 - `index.html` : réutiliser la logique de swap déjà en place pour `working`
 - Sprites : créer les frames additionnelles pour le peon
 
-### 1.2 `[ ]` Clic interactif sur le sprite
+**Statut :** Moteur idle swap implémenté dans `index.html`. Reste à wirer les idle anims dans les manifests (peasant, peon).
+
+### 1.2 `[x]` Clic interactif sur le sprite
 Cliquer sur le sprite déclenche une réplique et une animation aléatoire (style pet/tamagotchi).
 
 **Changements :**
@@ -23,7 +25,9 @@ Cliquer sur le sprite déclenche une réplique et une animation aléatoire (styl
 - Manifest : nouveau pool de lignes `poke` (texte + son)
 - Animation : jouer une anim courte (sursaut, salut) puis retour à l'état courant
 
-### 1.3 `[ ]` Animations de transition
+**Statut :** Fait. Système de poke + death inclus (clic → réplique, N pokes → mort + revive).
+
+### 1.3 `[x]` Animations de transition
 Au lieu de couper net entre états, jouer une animation de passage (ex: le peon se lève, attrape son outil, puis commence à travailler).
 
 **Changements :**
@@ -31,7 +35,9 @@ Au lieu de couper net entre états, jouer une animation de passage (ex: le peon 
 - `index.html` : dans `updateState()`, jouer la transition avant de lancer l'état cible
 - Sprites : créer les frames de transition
 
-### 1.4 `[ ]` Réactions contextuelles aux hooks
+**Statut :** Moteur de transitions implémenté. Peasant configuré avec `idle→working: walk`.
+
+### 1.4 `[x]` Réactions contextuelles aux hooks
 Étendre le status.json pour transporter un `context` en plus de `state`, permettant au sprite de réagir différemment selon l'action (erreur, commit, test fail, écriture de fichier).
 
 **Changements :**
@@ -40,6 +46,8 @@ Au lieu de couper net entre états, jouer une animation de passage (ex: le peon 
 - `main.js` : transmettre le context au renderer
 - `index.html` : si un context est présent, jouer une animation/ligne spécifique (sprite triste sur erreur, célébration sur commit)
 - Manifest : nouveau champ `contexts` avec animations/lignes dédiées
+
+**Statut :** Implémenté. Pipeline complet : set-status.sh → status.json → main.js → index.html. Peasant configuré avec contexts `error` et `commit`.
 
 ---
 
@@ -70,12 +78,14 @@ Petit son de clavier pendant working, ding à finished. Option lo-fi en fond.
 - Option musique lo-fi dans le tray menu (toggle on/off)
 - Volume configurable dans `config.json`
 
-### 2.4 `[ ]` Notifications quand inactif
+### 2.4 `[x]` Notifications quand inactif
 Si Claude finit une tâche et que l'utilisateur est sur une autre fenêtre, afficher une notification système.
 
 **Changements :**
 - `main.js` : utiliser `Notification` d'Electron quand `state` passe à `idle` après `working`
 - Optionnel : configurable dans le tray menu
+
+**Statut :** Fait autrement, sans notification système. L'état vient des fichiers de session de Claude Code : le sprite annonce la session qui t'attend (bulle qui reste) et celle qui vient de finir, pour toutes les sessions ouvertes.
 
 ---
 

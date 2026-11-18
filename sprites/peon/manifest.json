@@ -12,13 +12,18 @@
   },
   "states": {
     "idle": {
-      "animation": "idle",
-      "loop": true
+      "animations": ["idle", "waiting"],
+      "loop": true,
+      "swapInterval": 5000
     },
     "working": {
       "animations": ["waiting", "working"],
       "loop": true,
       "swapInterval": 3000
+    },
+    "waiting": {
+      "animation": "waiting",
+      "loop": true
     },
     "finished": {
       "animation": "finished",
@@ -33,6 +38,10 @@
   },
   "lines": {
     "en": {
+      "waiting": [
+        { "text": "Something need doing?", "sound": "sounds/PeonWhat1.wav" },
+        { "text": "What you want?", "sound": "sounds/PeonWhat4.wav" }
+      ],
       "idle": [
         { "text": "Something need doing?", "sound": "sounds/PeonWhat1.wav" },
         { "text": "Me busy, leave me alone!", "sound": "sounds/PeonWhat2.wav" },
@@ -64,6 +73,10 @@
       ]
     },
     "fr": {
+      "waiting": [
+        { "text": "Que dois-je faire ?", "sound": "sounds/PeonWhat1_fr.wav" },
+        { "text": "Quoi ?", "sound": "sounds/PeonWhat2_fr.wav" }
+      ],
       "idle": [
         { "text": "Que dois-je faire ?", "sound": "sounds/PeonWhat1_fr.wav" },
         { "text": "Quoi ?", "sound": "sounds/PeonWhat2_fr.wav" },
