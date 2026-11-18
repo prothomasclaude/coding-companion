@@ -1,0 +1,269 @@
+{
+  "name": "Zombie",
+  "author": "Kenney (kenney.nl), CC0",
+  "framePattern": "zombie_{n}.png",
+  "display": {
+    "width": 96,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        0
+      ],
+      "speed": 400
+    },
+    "waiting": {
+      "frames": [
+        1,
+        6
+      ],
+      "speed": 420
+    },
+    "look": {
+      "frames": [
+        7,
+        11
+      ],
+      "speed": 450
+    },
+    "working": {
+      "frames": [
+        12,
+        17
+      ],
+      "speed": 220
+    },
+    "running": {
+      "frames": [
+        18,
+        25
+      ],
+      "speed": 110
+    },
+    "finished": {
+      "frames": [
+        26,
+        27
+      ],
+      "speed": 260
+    },
+    "victory": {
+      "frames": [
+        28,
+        32
+      ],
+      "speed": 200
+    },
+    "death": {
+      "frames": [
+        33,
+        37
+      ],
+      "speed": 220
+    }
+  },
+  "states": {
+    "idle": {
+      "animations": [
+        "idle",
+        "look",
+        "waiting"
+      ],
+      "loop": true,
+      "swapInterval": 6000
+    },
+    "working": {
+      "animations": [
+        "working",
+        "running"
+      ],
+      "loop": true,
+      "swapInterval": 5000
+    },
+    "waiting": {
+      "animation": "waiting",
+      "loop": true
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 3500,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "poke": {
+    "deathAfter": 5,
+    "deathAnimation": "death",
+    "deathDuration": 3000
+  },
+  "lines": {
+    "fr": {
+      "greeting": [
+        {
+          "text": "Ceeerveau..."
+        },
+        {
+          "text": "Grrr. Debout."
+        }
+      ],
+      "idle": [
+        {
+          "text": "Grrr..."
+        },
+        {
+          "text": "Faim."
+        },
+        {
+          "text": "Mmmh ?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Code... cerveau..."
+        },
+        {
+          "text": "Mâche les bugs."
+        },
+        {
+          "text": "Grrrmpile..."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Humain... viens..."
+        },
+        {
+          "text": "Besoin... cerveau... le tien."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Fini. Faim."
+        },
+        {
+          "text": "Graaah !"
+        }
+      ],
+      "victory": [
+        {
+          "text": "Ceeerveau bien mérité !"
+        },
+        {
+          "text": "Graaaah !"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Pas toucher. Bras fragile."
+        },
+        {
+          "text": "Grr !"
+        },
+        {
+          "text": "Encore un doigt et je mords."
+        }
+      ],
+      "death": [
+        {
+          "text": "Déjà mort..."
+        },
+        {
+          "text": "Re-mort."
+        }
+      ]
+    },
+    "en": {
+      "greeting": [
+        {
+          "text": "Braaains..."
+        },
+        {
+          "text": "Grr. Up."
+        }
+      ],
+      "idle": [
+        {
+          "text": "Grrr..."
+        },
+        {
+          "text": "Hungry."
+        },
+        {
+          "text": "Mmmh?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Code... brains..."
+        },
+        {
+          "text": "Chewing bugs."
+        },
+        {
+          "text": "Grrrmpiling..."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Human... come..."
+        },
+        {
+          "text": "Need... brain... yours."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Done. Hungry."
+        },
+        {
+          "text": "Graaah!"
+        }
+      ],
+      "victory": [
+        {
+          "text": "Well-earned braaains!"
+        },
+        {
+          "text": "Graaaah!"
+        }
+      ],
+      "poke": [
+        {
+          "text": "No touch. Arm loose."
+        },
+        {
+          "text": "Grr!"
+        },
+        {
+          "text": "One more finger and I bite."
+        }
+      ],
+      "death": [
+        {
+          "text": "Already dead..."
+        },
+        {
+          "text": "Re-dead."
+        }
+      ]
+    }
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#9CCC65"
+  },
+  "hitArea": {
+    "x": 12,
+    "y": 20,
+    "width": 72,
+    "height": 108
+  },
+  "preview": "zombie_0.png"
+}

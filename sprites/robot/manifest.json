@@ -1,0 +1,275 @@
+{
+  "name": "Robot",
+  "author": "Kenney (kenney.nl), CC0",
+  "framePattern": "robot_{n}.png",
+  "display": {
+    "width": 96,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        0
+      ],
+      "speed": 400
+    },
+    "waiting": {
+      "frames": [
+        1,
+        6
+      ],
+      "speed": 420
+    },
+    "look": {
+      "frames": [
+        7,
+        11
+      ],
+      "speed": 450
+    },
+    "working": {
+      "frames": [
+        12,
+        17
+      ],
+      "speed": 220
+    },
+    "running": {
+      "frames": [
+        18,
+        25
+      ],
+      "speed": 110
+    },
+    "finished": {
+      "frames": [
+        26,
+        27
+      ],
+      "speed": 260
+    },
+    "victory": {
+      "frames": [
+        28,
+        32
+      ],
+      "speed": 200
+    },
+    "death": {
+      "frames": [
+        33,
+        37
+      ],
+      "speed": 220
+    }
+  },
+  "states": {
+    "idle": {
+      "animations": [
+        "idle",
+        "look",
+        "waiting"
+      ],
+      "loop": true,
+      "swapInterval": 6000
+    },
+    "working": {
+      "animations": [
+        "working",
+        "running"
+      ],
+      "loop": true,
+      "swapInterval": 5000
+    },
+    "waiting": {
+      "animation": "waiting",
+      "loop": true
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 3500,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "poke": {
+    "deathAfter": 5,
+    "deathAnimation": "death",
+    "deathDuration": 3000
+  },
+  "lines": {
+    "fr": {
+      "greeting": [
+        {
+          "text": "Systèmes en ligne."
+        },
+        {
+          "text": "Bip. Prêt."
+        }
+      ],
+      "idle": [
+        {
+          "text": "En veille."
+        },
+        {
+          "text": "J'attends une instruction."
+        },
+        {
+          "text": "Bip ?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Calcul en cours..."
+        },
+        {
+          "text": "Je compile."
+        },
+        {
+          "text": "01101111 01101011"
+        },
+        {
+          "text": "Traitement."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Entrée requise."
+        },
+        {
+          "text": "Humain demandé."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Tâche terminée."
+        },
+        {
+          "text": "Exécution réussie."
+        }
+      ],
+      "victory": [
+        {
+          "text": "Zéro erreur !"
+        },
+        {
+          "text": "Bip bip !"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Contact détecté."
+        },
+        {
+          "text": "Ne pas toucher."
+        },
+        {
+          "text": "Capteurs sensibles !"
+        }
+      ],
+      "death": [
+        {
+          "text": "Erreur fatale..."
+        },
+        {
+          "text": "Redémarrage..."
+        }
+      ]
+    },
+    "en": {
+      "greeting": [
+        {
+          "text": "Systems online."
+        },
+        {
+          "text": "Beep. Ready."
+        }
+      ],
+      "idle": [
+        {
+          "text": "Standing by."
+        },
+        {
+          "text": "Awaiting instructions."
+        },
+        {
+          "text": "Beep?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Computing..."
+        },
+        {
+          "text": "Compiling."
+        },
+        {
+          "text": "01101111 01101011"
+        },
+        {
+          "text": "Processing."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "Input required."
+        },
+        {
+          "text": "Human needed."
+        }
+      ],
+      "finished": [
+        {
+          "text": "Task complete."
+        },
+        {
+          "text": "Run successful."
+        }
+      ],
+      "victory": [
+        {
+          "text": "Zero errors!"
+        },
+        {
+          "text": "Beep beep!"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Contact detected."
+        },
+        {
+          "text": "Do not touch."
+        },
+        {
+          "text": "Sensitive sensors!"
+        }
+      ],
+      "death": [
+        {
+          "text": "Fatal error..."
+        },
+        {
+          "text": "Rebooting..."
+        }
+      ]
+    }
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#4FC3F7"
+  },
+  "hitArea": {
+    "x": 12,
+    "y": 20,
+    "width": 72,
+    "height": 108
+  },
+  "preview": "robot_0.png"
+}

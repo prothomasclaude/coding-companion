@@ -1,0 +1,269 @@
+{
+  "name": "Aventurière",
+  "author": "Kenney (kenney.nl), CC0",
+  "framePattern": "aventuriere_{n}.png",
+  "display": {
+    "width": 96,
+    "height": 128
+  },
+  "animations": {
+    "idle": {
+      "frames": [
+        0,
+        0
+      ],
+      "speed": 400
+    },
+    "waiting": {
+      "frames": [
+        1,
+        6
+      ],
+      "speed": 420
+    },
+    "look": {
+      "frames": [
+        7,
+        11
+      ],
+      "speed": 450
+    },
+    "working": {
+      "frames": [
+        12,
+        17
+      ],
+      "speed": 220
+    },
+    "running": {
+      "frames": [
+        18,
+        25
+      ],
+      "speed": 110
+    },
+    "finished": {
+      "frames": [
+        26,
+        27
+      ],
+      "speed": 260
+    },
+    "victory": {
+      "frames": [
+        28,
+        32
+      ],
+      "speed": 200
+    },
+    "death": {
+      "frames": [
+        33,
+        37
+      ],
+      "speed": 220
+    }
+  },
+  "states": {
+    "idle": {
+      "animations": [
+        "idle",
+        "look",
+        "waiting"
+      ],
+      "loop": true,
+      "swapInterval": 6000
+    },
+    "working": {
+      "animations": [
+        "working",
+        "running"
+      ],
+      "loop": true,
+      "swapInterval": 5000
+    },
+    "waiting": {
+      "animation": "waiting",
+      "loop": true
+    },
+    "finished": {
+      "animation": "finished",
+      "loop": true,
+      "duration": 3500,
+      "then": {
+        "animation": "victory",
+        "loop": false,
+        "thenIdle": true
+      }
+    }
+  },
+  "poke": {
+    "deathAfter": 5,
+    "deathAnimation": "death",
+    "deathDuration": 3000
+  },
+  "lines": {
+    "fr": {
+      "greeting": [
+        {
+          "text": "En route !"
+        },
+        {
+          "text": "Carte en main."
+        }
+      ],
+      "idle": [
+        {
+          "text": "Où va-t-on ?"
+        },
+        {
+          "text": "Je surveille le camp."
+        },
+        {
+          "text": "Hmm ?"
+        }
+      ],
+      "working": [
+        {
+          "text": "J'explore le code."
+        },
+        {
+          "text": "Piste fraîche."
+        },
+        {
+          "text": "Je défriche."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "J'ai besoin de toi ici."
+        },
+        {
+          "text": "Carrefour : tu choisis ?"
+        }
+      ],
+      "finished": [
+        {
+          "text": "Trésor trouvé !"
+        },
+        {
+          "text": "Expédition bouclée."
+        }
+      ],
+      "victory": [
+        {
+          "text": "Sommet atteint !"
+        },
+        {
+          "text": "Yes !"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Hé, mon sac !"
+        },
+        {
+          "text": "On se calme."
+        },
+        {
+          "text": "Pas le chapeau !"
+        }
+      ],
+      "death": [
+        {
+          "text": "Un piège..."
+        },
+        {
+          "text": "Aïe."
+        }
+      ]
+    },
+    "en": {
+      "greeting": [
+        {
+          "text": "Off we go!"
+        },
+        {
+          "text": "Map in hand."
+        }
+      ],
+      "idle": [
+        {
+          "text": "Where to?"
+        },
+        {
+          "text": "Watching the camp."
+        },
+        {
+          "text": "Hmm?"
+        }
+      ],
+      "working": [
+        {
+          "text": "Exploring the code."
+        },
+        {
+          "text": "Fresh trail."
+        },
+        {
+          "text": "Clearing the path."
+        }
+      ],
+      "waiting": [
+        {
+          "text": "I need you here."
+        },
+        {
+          "text": "Crossroads: your call?"
+        }
+      ],
+      "finished": [
+        {
+          "text": "Treasure found!"
+        },
+        {
+          "text": "Expedition done."
+        }
+      ],
+      "victory": [
+        {
+          "text": "Summit reached!"
+        },
+        {
+          "text": "Yes!"
+        }
+      ],
+      "poke": [
+        {
+          "text": "Hey, my bag!"
+        },
+        {
+          "text": "Easy now."
+        },
+        {
+          "text": "Not the hat!"
+        }
+      ],
+      "death": [
+        {
+          "text": "A trap..."
+        },
+        {
+          "text": "Ouch."
+        }
+      ]
+    }
+  },
+  "effects": {
+    "thinkingAura": true,
+    "poseParticles": true,
+    "particleColor": "#FFB74D"
+  },
+  "hitArea": {
+    "x": 12,
+    "y": 20,
+    "width": 72,
+    "height": 108
+  },
+  "preview": "aventuriere_0.png"
+}
